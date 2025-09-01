@@ -1,5 +1,5 @@
-SET ROLE TO TP_owner;
-CREATE SCHEMA TP;
+SET ROLE TO tp_owner;
+CREATE SCHEMA tp;
 GRANT USAGE ON SCHEMA TP TO administrador;
 
 CREATE TABLE TP.alumnos (
