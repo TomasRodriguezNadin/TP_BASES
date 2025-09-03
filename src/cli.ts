@@ -1,7 +1,7 @@
 import { Client } from 'pg'
 import { readFile } from 'node:fs/promises';
 
-async function parsearCsv(path: String) {
+async function parsearCsv(path) {
     const contents = await readFile(path, {encoding: 'utf8'});
     const firstLine = contents.split(/\r?\n/)[0];
     const titles = firstLine.split(',').map(title => title.trim());
@@ -12,7 +12,7 @@ async function parsearCsv(path: String) {
     return {data, titles};
 }
 
-async function primerAlumnoPidiendoTitulo(client: Client) {
+async function primerAlumnoPidiendoTitulo(client) {
     const sql = `SELECT * FROM TP.alumnos
         WHERE titulo_en_tramite is NOT NULL
         ORDER BY egreso`
@@ -25,12 +25,13 @@ async function primerAlumnoPidiendoTitulo(client: Client) {
     }
 }
 
-async function actualizarTablaAlumnos(client: Client, listaAlumnos, columnas){
+async function actualizarTablaAlumnos(client, listaAlumnos, columnas){
     await client.query("DELETE FROM TP.alumnos");
     for(const linea of listaAlumnos){
         const datos = linea.split(',');
         const instruccion = `INSERT INTO TP.alumnos (${columnas.join(', ')}) VALUES
                             (${datos.map((dato) => dato === '' ? 'null' : `'` + dato + `'`).join(',')})`;
+        console.log(instruccion);
         await client.query(instruccion);
     }
 }
