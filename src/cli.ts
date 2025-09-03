@@ -8,7 +8,7 @@ async function parsearCsv(path: String) {
     // Revisar el codigo de la clase para ver por que hace slice y filter aca
     const data = contents.split(/\r?\n/) // Separa en lineas
                         .slice(1) // Quita el primer elemento con los titulos
-                        .filter(line => lin.trim() !== ''); // Elimina las filas que no contienen info
+                        .filter(line => line.trim() !== ''); // Elimina las filas que no contienen info
     return {data, titles};
 }
 
@@ -51,6 +51,7 @@ async function main(){
     }else{
         console.log(`El alumno (${alumno}) necesita el titulo`)
     }
+    await clientDB.end();
 }
 
-principal();
+main();
