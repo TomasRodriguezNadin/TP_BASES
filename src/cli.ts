@@ -53,6 +53,23 @@ async function main(){
         console.log(`El alumno (${alumno}) necesita el titulo`)
     }
     await clientDB.end();
+
+    const cantParametros = process.argv.length - 2;
+    if(cantParametros !== 2){
+        console.log("Introduzca una cantidad correcta de instrucciones");
+    }else{
+        const instruccion = process.argv[process.argv.length - 2];
+        const argumento = process.argv[process.argv.length - 1];
+        if(instruccion === '--archivo'){
+            console.log(`Refrescar base de datos con csv (${argumento})`);
+        } else if(instruccion === `--fecha`){
+            console.log(`Buscar alumnos por fecha (${argumento})`);
+        } else if(instruccion === `--lu`){
+            console.log(`Buscar titulo de alumno de lu (${argumento})`);
+        } else{
+            console.log(`Introduzca una instruccion valida`);
+        }
+    }
 }
 
 main();
