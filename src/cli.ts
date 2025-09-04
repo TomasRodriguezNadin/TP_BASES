@@ -1,7 +1,7 @@
 import { Client } from 'pg'
 import { readFile } from 'node:fs/promises';
 
-async function parsearCsv(path) {
+async function parsearCsv(path: String) {
     const contents = await readFile(path, {encoding: 'utf8'});
     const firstLine = contents.split(/\r?\n/)[0];
     const titles = firstLine.split(',').map(title => title.trim());
@@ -26,7 +26,6 @@ async function primerAlumnoPidiendoTitulo(client) {
 }
 
 async function actualizarTablaAlumnos(client, listaAlumnos, columnas){
-    await client.query("DELETE FROM TP.alumnos");
     for(const linea of listaAlumnos){
         const datos = linea.split(',');
         const instruccion = `INSERT INTO TP.alumnos (${columnas.join(', ')}) VALUES
@@ -36,23 +35,51 @@ async function actualizarTablaAlumnos(client, listaAlumnos, columnas){
     }
 }
 
+async function generarCertificadoAlumno(client, row) {
+    console.log(row.lu);
+}
+
+async function buscarAlumnosPorFecha(client, fecha: String) {
+    const instruccion = `SELECT * FROM tp.alumnos
+                        WHERE titulo_en_tramite = '${fecha}'`;
+    const alumnos = await client.query(instruccion);
+
+    if(alumnos.rows.length === 0){
+        return null;
+    }
+
+    for(const row of alumnos.rows){
+        generarCertificadoAlumno(client, row)
+    }
+}
+
+async function crearCertificadoPorLU(client, lu){
+    const instruccion = `SELECT * FROM tp.alumnos
+                        WHERE lu = '${lu}'`;
+    const alumno = await client.query(instruccion);
+
+    if(alumno.rows.length === 0){
+        console.log(`No existe alumno con libreta ${lu}`);
+    } else if(alumno.rows[0].titulo_en_tramite === null){
+        console.log(`El alumno de libreta ${lu} no esta tramitando su titulo`);
+    } else {
+        await generarCertificadoAlumno(client, alumno.rows[0]);
+    }
+}
+
 
 async function main(){
     const clientDB = new Client();
-    const path = '../recursos/alumnos.csv';
+    const path: String = '../recursos/alumnos.csv';
     await clientDB.connect();
 
-    let {data: listaAlumnos, titles: categories} = await parsearCsv(path);
+    // let alumno = await primerAlumnoPidiendoTitulo(clientDB);
 
-    await actualizarTablaAlumnos(clientDB, listaAlumnos, categories);
-    let alumno = await primerAlumnoPidiendoTitulo(clientDB);
-
-    if(alumno === null){
-        console.log('No hay alumnos que necesitan tramitar el titulo');
-    }else{
-        console.log(`El alumno (${alumno}) necesita el titulo`)
-    }
-    await clientDB.end();
+    //if(alumno === null){
+    //    console.log('No hay alumnos que necesitan tramitar el titulo');
+    //}else{
+    //    console.log(`El alumno (${alumno}) necesita el titulo`)
+    //}
 
     const cantParametros = process.argv.length - 2;
     if(cantParametros !== 2){
@@ -61,15 +88,16 @@ async function main(){
         const instruccion = process.argv[process.argv.length - 2];
         const argumento = process.argv[process.argv.length - 1];
         if(instruccion === '--archivo'){
-            console.log(`Refrescar base de datos con csv (${argumento})`);
+            let {data: listaAlumnos, titles: categories} = await parsearCsv(argumento);
+            await actualizarTablaAlumnos(clientDB, listaAlumnos, categories);
         } else if(instruccion === `--fecha`){
-            console.log(`Buscar alumnos por fecha (${argumento})`);
+            await buscarAlumnosPorFecha(clientDB, argumento);
         } else if(instruccion === `--lu`){
-            console.log(`Buscar titulo de alumno de lu (${argumento})`);
+            await crearCertificadoPorLU(clientDB, argumento);
         } else{
             console.log(`Introduzca una instruccion valida`);
         }
     }
+    await clientDB.end();
 }
-
 main();
