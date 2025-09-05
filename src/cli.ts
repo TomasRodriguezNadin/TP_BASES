@@ -1,7 +1,7 @@
 import { Client } from 'pg'
 import { readFile } from 'node:fs/promises';
 
-async function parsearCsv(path: String) {
+async function parsearCsv(path) {
     const contents = await readFile(path, {encoding: 'utf8'});
     const firstLine = contents.split(/\r?\n/)[0];
     const titles = firstLine.split(',').map(title => title.trim());
@@ -39,7 +39,7 @@ async function generarCertificadoAlumno(client, row) {
     console.log(row.lu);
 }
 
-async function buscarAlumnosPorFecha(client, fecha: String) {
+async function buscarAlumnosPorFecha(client, fecha) {
     const instruccion = `SELECT * FROM tp.alumnos
                         WHERE titulo_en_tramite = '${fecha}'`;
     const alumnos = await client.query(instruccion);
@@ -67,37 +67,44 @@ async function crearCertificadoPorLU(client, lu){
     }
 }
 
-
-async function main(){
-    const clientDB = new Client();
-    const path: String = '../recursos/alumnos.csv';
-    await clientDB.connect();
-
-    // let alumno = await primerAlumnoPidiendoTitulo(clientDB);
-
-    //if(alumno === null){
-    //    console.log('No hay alumnos que necesitan tramitar el titulo');
-    //}else{
-    //    console.log(`El alumno (${alumno}) necesita el titulo`)
-    //}
-
+async function parsearYProcesarInput(cliente){
     const cantParametros = process.argv.length - 2;
     if(cantParametros !== 2){
         console.log("Introduzca una cantidad correcta de instrucciones");
-    }else{
-        const instruccion = process.argv[process.argv.length - 2];
-        const argumento = process.argv[process.argv.length - 1];
-        if(instruccion === '--archivo'){
-            let {data: listaAlumnos, titles: categories} = await parsearCsv(argumento);
-            await actualizarTablaAlumnos(clientDB, listaAlumnos, categories);
-        } else if(instruccion === `--fecha`){
-            await buscarAlumnosPorFecha(clientDB, argumento);
-        } else if(instruccion === `--lu`){
-            await crearCertificadoPorLU(clientDB, argumento);
-        } else{
-            console.log(`Introduzca una instruccion valida`);
-        }
+        return null;
     }
+
+    const instruccion = process.argv[process.argv.length - 2];
+    const argumento = process.argv[process.argv.length - 1];
+    switch (instruccion) {
+        case '--archivo':
+            let {data: listaAlumnos, titles: categories} = await parsearCsv(argumento);
+            await actualizarTablaAlumnos(cliente, listaAlumnos, categories);
+            break;
+
+        case `--fecha`:
+            await buscarAlumnosPorFecha(cliente, argumento);
+            break;
+
+        case `--lu`:
+            await crearCertificadoPorLU(cliente, argumento);
+            break;
+
+        default:
+            console.log(`Introduzca una instruccion valida`);
+            break;
+    }
+}
+
+
+async function main(){
+    const clientDB = new Client();
+    const path = '../recursos/alumnos.csv';
+    await clientDB.connect();
+
+    await parsearYProcesarInput(clientDB);
+    
     await clientDB.end();
 }
+
 main();
