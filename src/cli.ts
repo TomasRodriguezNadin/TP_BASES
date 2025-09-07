@@ -69,29 +69,36 @@ async function crearCertificadoPorLU(client, lu){
 
 async function parsearYProcesarInput(cliente){
     const cantParametros = process.argv.length - 2;
-    if(cantParametros !== 2){
-        console.log("Introduzca una cantidad correcta de instrucciones");
-        return null;
-    }
-
     const instruccion = process.argv[process.argv.length - 2];
     const argumento = process.argv[process.argv.length - 1];
     switch (instruccion) {
         case '--archivo':
+            if (!argumento.endsWith('.csv')) {
+                console.log("El archivo debe ser un csv");
+                return null;
+            }
             let {data: listaAlumnos, titles: categories} = await parsearCsv(argumento);
             await actualizarTablaAlumnos(cliente, listaAlumnos, categories);
             break;
 
         case `--fecha`:
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(argumento)) {
+                console.log("La fecha debe estar en formato YYYY-MM-DD");
+                return null;
+            }
             await buscarAlumnosPorFecha(cliente, argumento);
             break;
 
         case `--lu`:
+            if (!/^\d{2,4}\/\d{2}$/.test(argumento)) {
+                console.log("La LU debe estar en formato NNN/YY");
+                return null;
+            }
             await crearCertificadoPorLU(cliente, argumento);
             break;
 
         default:
-            console.log(`Introduzca una instruccion valida`);
+            console.log("Introduzca una instruccion valida\n--archivo <ruta_al_archivo_csv>\n--fecha <YYYY-MM-DD>\n--lu <identificador>");
             break;
     }
 }
