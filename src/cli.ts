@@ -27,7 +27,7 @@ async function primerAlumnoPidiendoTitulo(client) {
 
 async function actualizarTablaAlumnos(client, listaAlumnos, columnas){
     for(const linea of listaAlumnos){
-        const datos = linea.split(',');
+        const datos = linea.split(',').map(value => value.trim());
         const instruccion = `INSERT INTO TP.alumnos (${columnas.join(', ')}) VALUES
                             (${datos.map((dato) => dato === '' ? 'null' : `'` + dato + `'`).join(',')})`;
         console.log(instruccion);
