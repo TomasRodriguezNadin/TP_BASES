@@ -54,34 +54,46 @@ async function crearCertificadoPorLU(client:Client, lu:string){
     }
 }
 
+async function cargarAlumnosDesdeCsv(cliente:Client, path:string){
+    if (!path.endsWith('.csv')) {
+        console.log("El archivo debe ser un csv");
+        return null;
+    }
+    let {data: listaAlumnos, titles: categories} = await parsearCsv(path);
+    await actualizarTablaAlumnos(cliente, listaAlumnos, categories);
+}
+
+async function generarCertificadoPorFecha(cliente:Client, fecha:string) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+        console.log("La fecha debe estar en formato YYYY-MM-DD");
+        return null;
+    }
+    await buscarAlumnosPorFecha(cliente, fecha);   
+}
+
+async function generarCertificadoPorLu(cliente:Client, lu:string){
+    if (!/^\d{2,4}\/\d{2}$/.test(lu)) {
+        console.log("La LU debe estar en formato NNN/YY");
+        return null;
+    }
+    await crearCertificadoPorLU(cliente, lu);
+}
+
 async function parsearYProcesarInput(cliente:Client){
     const cantParametros = process.argv.length - 2;
     const instruccion = process.argv[process.argv.length - 2];
     const argumento = process.argv[process.argv.length - 1];
     switch (instruccion) {
         case '--archivo':
-            if (!argumento.endsWith('.csv')) {
-                console.log("El archivo debe ser un csv");
-                return null;
-            }
-            let {data: listaAlumnos, titles: categories} = await parsearCsv(argumento);
-            await actualizarTablaAlumnos(cliente, listaAlumnos, categories);
+            await cargarAlumnosDesdeCsv(cliente, argumento);
             break;
 
         case `--fecha`:
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(argumento)) {
-                console.log("La fecha debe estar en formato YYYY-MM-DD");
-                return null;
-            }
-            await buscarAlumnosPorFecha(cliente, argumento);
+            await generarCertificadoPorFecha(cliente, argumento);
             break;
 
         case `--lu`:
-            if (!/^\d{2,4}\/\d{2}$/.test(argumento)) {
-                console.log("La LU debe estar en formato NNN/YY");
-                return null;
-            }
-            await crearCertificadoPorLU(cliente, argumento);
+            await generarCertificadoPorLu(cliente, argumento)
             break;
 
         default:
