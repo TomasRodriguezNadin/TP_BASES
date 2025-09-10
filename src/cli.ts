@@ -12,19 +12,6 @@ async function parsearCsv(path) {
     return {data, titles};
 }
 
-async function primerAlumnoPidiendoTitulo(client) {
-    const sql = `SELECT * FROM TP.alumnos
-        WHERE titulo_en_tramite is NOT NULL
-        ORDER BY egreso`
-    const alumnos = await client.query(sql);
-
-    if(alumnos.rows.length !== 0){
-        return alumnos.rows[0];
-    }else{
-        return null;
-    }
-}
-
 async function actualizarTablaAlumnos(client, listaAlumnos, columnas){
     for(const linea of listaAlumnos){
         const datos = linea.split(',').map(value => value.trim());
@@ -106,7 +93,6 @@ async function parsearYProcesarInput(cliente){
 
 async function main(){
     const clientDB = new Client();
-    const path = '../recursos/alumnos.csv';
     await clientDB.connect();
 
     await parsearYProcesarInput(clientDB);
