@@ -79,27 +79,34 @@ async function generarCertificadoPorLu(cliente:Client, lu:string){
     await crearCertificadoPorLU(cliente, lu);
 }
 
-async function parsearYProcesarInput(cliente:Client){
-    const cantParametros = process.argv.length - 2;
-    const instruccion = process.argv[process.argv.length - 2];
-    const argumento = process.argv[process.argv.length - 1];
-    switch (instruccion) {
-        case '--archivo':
-            await cargarAlumnosDesdeCsv(cliente, argumento);
-            break;
+const instrucciones = [
+    {comando: 'archivo', cantArgumentos: 1, funcion: cargarAlumnosDesdeCsv},
+    {comando: 'fecha', cantArgumentos: 1, funcion: generarCertificadoPorFecha},
+    {comando: 'lu', cantArgumentos: 1, funcion: generarCertificadoPorLu},
+];
 
-        case `--fecha`:
-            await generarCertificadoPorFecha(cliente, argumento);
-            break;
+const prefijoComando = '--';
 
-        case `--lu`:
-            await generarCertificadoPorLu(cliente, argumento)
-            break;
+async function parsearInput():{comando:string, argumento:string[], funcion: Function}[]{
+    let ind = 0;
+    const cantParametros = process.argv.length;
+    var comandos: {comando: string, argumento: string[], funcion: Function}[] = [];
 
-        default:
-            console.log("Introduzca una instruccion valida\n--archivo <ruta_al_archivo_csv>\n--fecha <YYYY-MM-DD>\n--lu <identificador>");
-            break;
+    while (ind < cantParametros){
+        const parametro = process.argv[ind];
+        ind++;
+
+        if(parametro.startsWith(prefijoComando)){
+            const comando = parametro.slice(prefijoComando.length);
+            const instruccion = instrucciones.find(ins => ins.comando === comando)
+            if(instruccion == null) throw new Error(`${comando} no es un comando valido`);
+            const argumentos = process.argv.slice(ind, ind + instruccion.cantArgumentos);
+            const funcion = instruccion.funcion;
+            comandos.push({comando, argumentos, funcion});
+        }
     }
+
+    return comandos;
 }
 
 
@@ -107,7 +114,11 @@ async function main(){
     const clientDB = new Client();
     await clientDB.connect();
 
-    await parsearYProcesarInput(clientDB);
+    const parametros = await parsearInput();
+    for(const {comando, argumentos, funcion} of parametros){
+        console.log(`Ejecutando ${comando}`);
+        await funcion(clientDB, ...argumentos);
+    }
     
     await clientDB.end();
 }
