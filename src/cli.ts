@@ -7,18 +7,6 @@ async function generarCertificadoAlumno(client:Client, row) {
     console.log(row.lu);
 }
 
-async function crearCertificadoPorLU(client:Client, lu:string){
-    const alumno = await buscarAlumnoPorLU(client, lu);
-
-    if(alumno.length === 0){
-        console.log(`No existe alumno con libreta ${lu}`);
-    } else if(alumno[0].titulo_en_tramite === null){
-        console.log(`El alumno de libreta ${lu} no esta tramitando su titulo`);
-    } else {
-        await generarCertificadoAlumno(client, alumno[0]);
-    }
-}
-
 async function cargarAlumnosDesdeCsv(cliente:Client, path:string){
     if (!path.endsWith('.csv')) {
         console.log("El archivo debe ser un csv");
@@ -28,11 +16,16 @@ async function cargarAlumnosDesdeCsv(cliente:Client, path:string){
     await actualizarTablaAlumnos(cliente, listaAlumnos, categories);
 }
 
+function esFechaValida(fecha: string): bool{
+    return /^\d{4}-\d{2}-\d{2}$/.test(fecha); 
+}
+
 async function generarCertificadoPorFecha(cliente:Client, fecha:string) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    if (!esFechaValida(fecha)) {
         console.log("La fecha debe estar en formato YYYY-MM-DD");
         return null;
     }
+
     const alumnos = await buscarAlumnosPorFecha(cliente, fecha);   
 
     for(const alumno of alumnos){
@@ -40,12 +33,25 @@ async function generarCertificadoPorFecha(cliente:Client, fecha:string) {
     }
 }
 
+function esLUValida(lu:string): bool{
+    return /^\d{2,4}\/\d{2}$/.test(lu);
+}
+
 async function generarCertificadoPorLu(cliente:Client, lu:string){
-    if (!/^\d{2,4}\/\d{2}$/.test(lu)) {
+    if (!esLUValida) {
         console.log("La LU debe estar en formato NNN/YY");
         return null;
     }
-    await crearCertificadoPorLU(cliente, lu);
+
+    const alumno = await buscarAlumnoPorLU(cliente, lu);
+
+    if(alumno.length == 0){
+        console.log(`No existe alumno con libreta ${lu}`);
+    } else if(alumno[0].titulo_en_tramite === null){
+        console.log(`El alumno de libreta ${lu} no esta tramitando su titulo`);
+    } else {
+        await generarCertificadoAlumno(cliente, alumno[0]);
+    }
 }
 
 const instrucciones = [

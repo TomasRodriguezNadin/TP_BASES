@@ -15,9 +15,6 @@ export async function buscarAlumnosPorFecha(client:Client, fecha: string) {
                         WHERE titulo_en_tramite = '${fecha}'`;
     const alumnos = await client.query(instruccion);
 
-    if(alumnos.rows.length === 0){
-        return null;
-    }
     return alumnos.rows;
 }
 
