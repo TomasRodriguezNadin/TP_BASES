@@ -1,33 +1,21 @@
 import { Client } from 'pg';
 import { readFile } from 'node:fs/promises';
-import {actualizarTablaAlumnos, buscarAlumnosPorFecha} from './acciones/accionesSQL.ts';
-
-async function parsearCsv(path:string) {
-    const contents = await readFile(path, {encoding: 'utf8'});
-    const firstLine = contents.split(/\r?\n/)[0];
-    const titles = firstLine.split(',').map(title => title.trim());
-    // Revisar el codigo de la clase para ver por que hace slice y filter aca
-    const data = contents.split(/\r?\n/) // Separa en lineas
-                        .slice(1) // Quita el primer elemento con los titulos
-                        .filter(line => line.trim() !== ''); // Elimina las filas que no contienen info
-    return {data, titles};
-}
+import {actualizarTablaAlumnos, buscarAlumnosPorFecha, buscarAlumnoPorLU} from './acciones/accionesSQL.ts';
+import {parsearCsv} from './acciones/accionesCSV.ts'
 
 async function generarCertificadoAlumno(client:Client, row) {
     console.log(row.lu);
 }
 
 async function crearCertificadoPorLU(client:Client, lu:string){
-    const instruccion = `SELECT * FROM tp.alumnos
-                        WHERE lu = '${lu}'`;
-    const alumno = await client.query(instruccion);
+    const alumno = await buscarAlumnoPorLU(client, lu);
 
-    if(alumno.rows.length === 0){
+    if(alumno.length === 0){
         console.log(`No existe alumno con libreta ${lu}`);
-    } else if(alumno.rows[0].titulo_en_tramite === null){
+    } else if(alumno[0].titulo_en_tramite === null){
         console.log(`El alumno de libreta ${lu} no esta tramitando su titulo`);
     } else {
-        await generarCertificadoAlumno(client, alumno.rows[0]);
+        await generarCertificadoAlumno(client, alumno[0]);
     }
 }
 

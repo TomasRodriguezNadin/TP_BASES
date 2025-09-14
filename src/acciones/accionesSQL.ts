@@ -19,6 +19,11 @@ export async function buscarAlumnosPorFecha(client:Client, fecha: string) {
         return null;
     }
     return alumnos.rows;
+}
 
-
+export async function buscarAlumnoPorLU(cliente:Client, lu:string){
+    const instruccion = `SELECT * FROM tp.alumnos
+                        WHERE lu = '${lu}'`;
+    const alumno = await cliente.query(instruccion);
+    return alumno.rows;
 }
