@@ -1,5 +1,6 @@
-import { Client } from 'pg'
+import { Client } from 'pg';
 import { readFile } from 'node:fs/promises';
+import {actualizarTablaAlumnos, buscarAlumnosPorFecha} from './acciones/accionesSQL.ts';
 
 async function parsearCsv(path:string) {
     const contents = await readFile(path, {encoding: 'utf8'});
@@ -12,32 +13,8 @@ async function parsearCsv(path:string) {
     return {data, titles};
 }
 
-async function actualizarTablaAlumnos(client:Client, listaAlumnos:string[], columnas:string[]){
-    for(const linea of listaAlumnos){
-        const datos = linea.split(',').map(value => value.trim());
-        const instruccion = `INSERT INTO TP.alumnos (${columnas.join(', ')}) VALUES
-                            (${datos.map((dato) => dato === '' ? 'null' : `'` + dato + `'`).join(',')})`;
-        console.log(instruccion);
-        await client.query(instruccion);
-    }
-}
-
 async function generarCertificadoAlumno(client:Client, row) {
     console.log(row.lu);
-}
-
-async function buscarAlumnosPorFecha(client:Client, fecha) {
-    const instruccion = `SELECT * FROM tp.alumnos
-                        WHERE titulo_en_tramite = '${fecha}'`;
-    const alumnos = await client.query(instruccion);
-
-    if(alumnos.rows.length === 0){
-        return null;
-    }
-
-    for(const row of alumnos.rows){
-        generarCertificadoAlumno(client, row)
-    }
 }
 
 async function crearCertificadoPorLU(client:Client, lu:string){
@@ -68,7 +45,11 @@ async function generarCertificadoPorFecha(cliente:Client, fecha:string) {
         console.log("La fecha debe estar en formato YYYY-MM-DD");
         return null;
     }
-    await buscarAlumnosPorFecha(cliente, fecha);   
+    const alumnos = await buscarAlumnosPorFecha(cliente, fecha);   
+
+    for(const alumno of alumnos){
+        generarCertificadoAlumno(cliente, alumno);
+    }
 }
 
 async function generarCertificadoPorLu(cliente:Client, lu:string){

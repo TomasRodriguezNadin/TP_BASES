@@ -1,9 +1,10 @@
 import * as fs from 'fs/promises';
+import {path_eventos} from './constantes.ts';
 
 async function procesarDatos(fileCsv: string){
     const instructionCsv = fileCsv.slice(0, -4) + "instruccion.csv";
 
-    const contenido = await fs.readFile("./local-eventos/" + instructionCsv, "utf8");
+    const contenido = await fs.readFile(path_eventos + instructionCsv, "utf8");
 
     const comandos = contenido.split(", ");
 
@@ -21,7 +22,7 @@ async function filtrarInstrucciones(archivos: string[]): Promise<string[]>{
 }
 
 async function procesarCarpeta(){
-    const archivos = await fs.readdir('./local-eventos');
+    const archivos = await fs.readdir(path_eventos);
     if(archivos.length > 0){
 
         const datos = await filtrarInstrucciones(archivos); 
