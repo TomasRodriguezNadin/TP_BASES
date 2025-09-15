@@ -1,10 +1,22 @@
 import { Client } from 'pg'; 
 
+function sqlLiteral(literal:string|null): string{
+    const res = (literal == null ? `null` : 
+                typeof literal == "string" ? `'${literal.replace(/'/g, `''`)}'` : undefined);
+
+    if(res == undefined){
+        console.log(`${literal} no es una entrada valida para la base de datos`);
+        throw new Error("sqlLiteral invalido");
+    }
+
+    return res;
+}
+
 export async function actualizarTablaAlumnos(client:Client, listaAlumnos:string[], columnas:string[]){
     for(const linea of listaAlumnos){
         const datos = linea.split(',').map(value => value.trim());
         const instruccion = `INSERT INTO TP.alumnos (${columnas.join(', ')}) VALUES
-                            (${datos.map((dato) => dato === '' ? 'null' : `'` + dato + `'`).join(',')})`;
+                            (${datos.map((dato) => dato === '' ? 'null' : sqlLiteral(dato) ).join(',')})`;
         console.log(instruccion);
         await client.query(instruccion);
     }
@@ -12,7 +24,7 @@ export async function actualizarTablaAlumnos(client:Client, listaAlumnos:string[
 
 export async function buscarAlumnosPorFecha(client:Client, fecha: string) {
     const instruccion = `SELECT * FROM tp.alumnos
-                        WHERE titulo_en_tramite = '${fecha}'`;
+                        WHERE titulo_en_tramite = ${sqlLiteral(fecha)}`;
     const alumnos = await client.query(instruccion);
 
     return alumnos.rows;
@@ -20,7 +32,7 @@ export async function buscarAlumnosPorFecha(client:Client, fecha: string) {
 
 export async function buscarAlumnoPorLU(cliente:Client, lu:string){
     const instruccion = `SELECT * FROM tp.alumnos
-                        WHERE lu = '${lu}'`;
+                        WHERE lu = ${sqlLiteral(lu)}`;
     const alumno = await cliente.query(instruccion);
     return alumno.rows;
 }
