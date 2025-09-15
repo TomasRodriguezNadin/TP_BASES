@@ -1,10 +1,27 @@
 import { Client } from 'pg';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import {actualizarTablaAlumnos, buscarAlumnosPorFecha, buscarAlumnoPorLU} from './acciones/accionesSQL.ts';
 import {parsearCsv} from './acciones/accionesCSV.ts'
+import {path_output, path_plantilla} from './constantes.ts'
 
-async function generarCertificadoAlumno(client:Client, row) {
-    console.log(row.lu);
+function comoString(cadena: string|null): string{
+    const res = cadena === null ? '' :
+                cadena;
+    return res;
+}
+
+async function generarCertificadoAlumno(alumno: Record<string, string>) {
+    let certificado = await readFile(path_plantilla, {encoding: 'utf8'});
+    for(const [key, value] of Object.entries(alumno)){
+        certificado = certificado.replace(
+            `[#${key}]`,
+            comoString(value)
+        );
+    }
+
+    const outputFile = path_output + `certificado${alumno.lu.replace("/", "-")}.html`;
+    await writeFile(outputFile, certificado, 'utf8');
+    console.log(`Certificado para ${alumno.lu}`);
 }
 
 async function cargarAlumnosDesdeCsv(cliente:Client, path:string){
@@ -16,7 +33,7 @@ async function cargarAlumnosDesdeCsv(cliente:Client, path:string){
     await actualizarTablaAlumnos(cliente, listaAlumnos, categories);
 }
 
-function esFechaValida(fecha: string): bool{
+function esFechaValida(fecha: string): boolean{
     return /^\d{4}-\d{2}-\d{2}$/.test(fecha); 
 }
 
@@ -29,11 +46,11 @@ async function generarCertificadoPorFecha(cliente:Client, fecha:string) {
     const alumnos = await buscarAlumnosPorFecha(cliente, fecha);   
 
     for(const alumno of alumnos){
-        generarCertificadoAlumno(cliente, alumno);
+        generarCertificadoAlumno(alumno);
     }
 }
 
-function esLUValida(lu:string): bool{
+function esLUValida(lu:string): boolean{
     return /^\d{2,4}\/\d{2}$/.test(lu);
 }
 
@@ -50,7 +67,7 @@ async function generarCertificadoPorLu(cliente:Client, lu:string){
     } else if(alumno[0].titulo_en_tramite === null){
         console.log(`El alumno de libreta ${lu} no esta tramitando su titulo`);
     } else {
-        await generarCertificadoAlumno(cliente, alumno[0]);
+        await generarCertificadoAlumno(alumno[0]);
     }
 }
 
@@ -62,10 +79,10 @@ const instrucciones = [
 
 const prefijoComando = '--';
 
-async function parsearInput():{comando:string, argumento:string[], funcion: Function}[]{
+async function parsearInput(): Promise<{comando:string, argumentos:string[], funcion: Function}[]>{
     let ind = 0;
     const cantParametros = process.argv.length;
-    var comandos: {comando: string, argumento: string[], funcion: Function}[] = [];
+    var comandos: {comando: string, argumentos: string[], funcion: Function}[] = [];
 
     while (ind < cantParametros){
         const parametro = process.argv[ind];
