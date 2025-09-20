@@ -1,6 +1,10 @@
 import { readFile } from 'node:fs/promises';
 
 export async function parsearCsv(path:string): Promise<{data:string[], titles:string[]}>{
+    if(!path.endsWith(".csv")){
+        console.log("El archivo debe ser un csv");
+        return {data: [], titles: []};
+    }
     const contents = await readFile(path, {encoding: 'utf8'});
     const firstLine = contents.split(/\r?\n/)[0];
     const titles = firstLine.split(',').map(title => title.trim());

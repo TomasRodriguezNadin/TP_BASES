@@ -25,10 +25,6 @@ async function generarCertificadoAlumno(alumno: Record<string, string>) {
 }
 
 async function cargarAlumnosDesdeCsv(cliente:Client, path:string){
-    if (!path.endsWith('.csv')) {
-        console.log("El archivo debe ser un csv");
-        return null;
-    }
     let {data: listaAlumnos, titles: categories} = await parsearCsv(path);
     await actualizarTablaAlumnos(cliente, listaAlumnos, categories);
 }
@@ -108,7 +104,7 @@ async function main(){
 
     const parametros = await parsearInput();
     for(const {comando, argumentos, funcion} of parametros){
-        console.log(`Ejecutando ${comando}`);
+        console.log(`Ejecutando ${comando} ${argumentos}`);
         await funcion(clientDB, ...argumentos);
     }
     
