@@ -1,8 +1,8 @@
 import { Client } from 'pg';
-import { readFile, writeFile } from 'node:fs/promises';
+import {readFile, writeFile, readdir} from 'node:fs/promises';
 import {actualizarTablaAlumnos, buscarAlumnosPorFecha, buscarAlumnoPorLU} from './acciones/accionesSQL.ts';
 import {parsearCsv} from './acciones/accionesCSV.ts'
-import {path_output, path_plantilla} from './constantes.ts'
+import {archivo_eventos, path_entrada, path_salida, path_plantilla} from './constantes.ts'
 
 function comoString(cadena: string|null): string{
     const res = cadena === null ? '' :
@@ -19,7 +19,7 @@ async function generarCertificadoAlumno(alumno: Record<string, string>) {
         );
     }
 
-    const outputFile = path_output + `certificado${alumno.lu.replace("/", "-")}.html`;
+    const outputFile = path_salida + `certificado${alumno.lu.replace("/", "-")}.html`;
     await writeFile(outputFile, certificado, 'utf8');
     console.log(`Certificado para ${alumno.lu}`);
 }
@@ -78,7 +78,7 @@ const prefijoComando = '--';
 async function parsearInput(): Promise<{comando:string, argumentos:string[], funcion: Function}[]>{
     let ind = 0;
     const cantParametros = process.argv.length;
-    var comandos: {comando: string, argumentos: string[], funcion: Function}[] = [];
+    let comandos: {comando: string, argumentos: string[], funcion: Function}[] = [];
 
     while (ind < cantParametros){
         const parametro = process.argv[ind];
@@ -97,12 +97,40 @@ async function parsearInput(): Promise<{comando:string, argumentos:string[], fun
     return comandos;
 }
 
+async function parsearInstrucciones(): Promise<{comando:string, argumentos:string[], funcion: Function}[]>{
+    const archivos = await readdir(path_entrada);
+    let comandos: {comando: string, argumentos: string[], funcion: Function}[] = [];
+
+    if(archivos.length > 0){
+        const {data} = await parsearCsv(archivo_eventos);
+
+        for (const linea of data){
+            const parametros = linea.split(",");
+            const comando = parametros[0];
+            const argumentos = parametros.slice(1);
+
+            const instruccion = instrucciones.find(ins => ins.comando === comando);
+
+            //TODO: funciones para handlear instrucciones invalidas y un log
+            //if(instruccion == null){
+            //    comandos.push({comando, argumentos: [comando], instruccionInvalidaHandler});
+            //}else if(instruccion.cantArgumentos != argumentos.length){
+            //    comandos.push({comando, argumentos, cantidadInvalidaDeArgumentosHandler});
+            //}else{
+                const funcion = instruccion.funcion;
+                comandos.push({comando, argumentos, funcion});
+            //}
+        }
+    }
+    return comandos;
+}
+
 
 async function main(){
     const clientDB = new Client();
     await clientDB.connect();
 
-    const parametros = await parsearInput();
+    const parametros = await parsearInstrucciones();
     for(const {comando, argumentos, funcion} of parametros){
         console.log(`Ejecutando ${comando} ${argumentos}`);
         await funcion(clientDB, ...argumentos);
