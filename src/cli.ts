@@ -55,7 +55,7 @@ function esLUValida(lu:string): boolean{
 }
 
 async function generarCertificadoPorLu(cliente:Client, lu:string){
-    if (!esLUValida) {
+    if (!esLUValida(lu)) {
         console.log("La LU debe estar en formato NNN/YY");
         return null;
     }
