@@ -97,6 +97,10 @@ async function parsearInput(): Promise<{comando:string, argumentos:string[], fun
     return comandos;
 }
 
+async function instruccionInvalidaHandler(cliente: Client, comando: string){
+    console.log(`La instruccion ${comando} es invalida`)
+}
+
 async function parsearInstrucciones(): Promise<{comando:string, argumentos:string[], funcion: Function}[]>{
     const archivos = await readdir(path_entrada);
     let comandos: {comando: string, argumentos: string[], funcion: Function}[] = [];
@@ -112,14 +116,12 @@ async function parsearInstrucciones(): Promise<{comando:string, argumentos:strin
             const instruccion = instrucciones.find(ins => ins.comando === comando);
 
             //TODO: funciones para handlear instrucciones invalidas y un log
-            //if(instruccion == null){
-            //    comandos.push({comando, argumentos: [comando], instruccionInvalidaHandler});
-            //}else if(instruccion.cantArgumentos != argumentos.length){
-            //    comandos.push({comando, argumentos, cantidadInvalidaDeArgumentosHandler});
-            //}else{
+            if(instruccion == null){
+                comandos.push({comando, argumentos: [comando], funcion: instruccionInvalidaHandler});
+            }else{
                 const funcion = instruccion.funcion;
                 comandos.push({comando, argumentos, funcion});
-            //}
+            }
         }
     }
     return comandos;
