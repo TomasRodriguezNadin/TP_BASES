@@ -1,4 +1,4 @@
-import { readFile, writeFile, truncate} from 'node:fs/promises';
+import { readFile, truncate} from 'node:fs/promises';
 //Un mutex para atomizar la lectura y borrado
 import lockfile from "proper-lockfile"; //npm install proper-lockfile
 
@@ -14,8 +14,6 @@ async function leerYBorrar(path: string): Promise<string>{
         //Elimino todo el contenido del archivo
         await truncate(path, 0);
 
-        //Salvo la primera linea (Nombre de columnas)
-        await writeFile(path, res.split(/\r?\n/)[0] + "\n");
     } finally{
         //Libero el archivo, para que pueda ser escrito por quien quiera
         await aLiberar(); 

@@ -106,7 +106,7 @@ async function parsearInstrucciones(): Promise<{comando:string, argumentos:strin
     const archivos = await readdir(path_entrada);
     let comandos: {comando: string, argumentos: string[], funcion: Function}[] = [];
 
-    if(archivos.length > 0){
+    if(archivos.length > 0){ 
 
         const {data} = await parsearCsv(archivo_eventos);
 
@@ -129,18 +129,29 @@ async function parsearInstrucciones(): Promise<{comando:string, argumentos:strin
     return comandos;
 }
 
-
-async function main(){
-    const clientDB = new Client();
-    await clientDB.connect();
+async function procesarCarpeta(clientDB: Client){
 
     const parametros = await parsearInstrucciones();
     for(const {comando, argumentos, funcion} of parametros){
         console.log(`Ejecutando ${comando} ${argumentos}`);
         await funcion(clientDB, ...argumentos);
     }
+}
+
+async function main(){
+    const clientDB = new Client();
+    await clientDB.connect();
+
+    //ejecutar cada 2 segundos
+    const intervalo = setInterval(async () => {
+        try {
+            await procesarCarpeta(clientDB);
+        } catch (err) {
+            console.error("Error al procesar carpeta:", err);
+        }
+    }, 2000);
     
-    await clientDB.end();
+    //await clientDB.end();
 }
 
 main();
