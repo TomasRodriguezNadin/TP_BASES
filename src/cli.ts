@@ -1,5 +1,5 @@
 import { Client } from 'pg';
-import {readFile, writeFile, readdir} from 'node:fs/promises';
+import {readFile, writeFile, readdir, unlink} from 'node:fs/promises';
 import {actualizarTablaAlumnos, buscarAlumnosPorFecha, buscarAlumnoPorLU} from './acciones/accionesSQL.ts';
 import {parsearCsv} from './acciones/accionesCSV.ts'
 import {archivo_eventos, path_entrada, path_salida, path_plantilla} from './constantes.ts'
@@ -27,6 +27,7 @@ async function generarCertificadoAlumno(alumno: Record<string, string>) {
 async function cargarAlumnosDesdeCsv(cliente:Client, path:string){
     let {data: listaAlumnos, titles: categories} = await parsearCsv(path);
     await actualizarTablaAlumnos(cliente, listaAlumnos, categories);
+    await unlink(path);
 }
 
 function esFechaValida(fecha: string): boolean{
@@ -106,6 +107,7 @@ async function parsearInstrucciones(): Promise<{comando:string, argumentos:strin
     let comandos: {comando: string, argumentos: string[], funcion: Function}[] = [];
 
     if(archivos.length > 0){
+
         const {data} = await parsearCsv(archivo_eventos);
 
         for (const linea of data){
