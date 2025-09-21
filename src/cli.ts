@@ -1,8 +1,8 @@
 import { Client } from 'pg';
-import {readFile, writeFile, readdir, unlink} from 'node:fs/promises';
+import {readFile, writeFile, readdir, unlink, appendFile} from 'node:fs/promises';
 import {actualizarTablaAlumnos, buscarAlumnosPorFecha, buscarAlumnoPorLU} from './acciones/accionesSQL.ts';
 import {parsearCsv} from './acciones/accionesCSV.ts'
-import {archivo_eventos, path_entrada, path_salida, path_plantilla} from './constantes.ts'
+import {archivo_eventos, path_entrada, path_salida, path_plantilla, archivo_log} from './constantes.ts'
 
 function comoString(cadena: string|null): string{
     const res = cadena === null ? '' :
@@ -21,7 +21,7 @@ async function generarCertificadoAlumno(alumno: Record<string, string>) {
 
     const outputFile = path_salida + `certificado${alumno.lu.replace("/", "-")}.html`;
     await writeFile(outputFile, certificado, 'utf8');
-    console.log(`Certificado para ${alumno.lu}`);
+    escribirEnLog(`Certificado para ${alumno.lu}`);
 }
 
 async function cargarAlumnosDesdeCsv(cliente:Client, path:string){
@@ -36,7 +36,7 @@ function esFechaValida(fecha: string): boolean{
 
 async function generarCertificadoPorFecha(cliente:Client, fecha:string) {
     if (!esFechaValida(fecha)) {
-        console.log("La fecha debe estar en formato YYYY-MM-DD");
+        escribirEnLog("La fecha debe estar en formato YYYY-MM-DD");
         return null;
     }
 
@@ -53,16 +53,16 @@ function esLUValida(lu:string): boolean{
 
 async function generarCertificadoPorLu(cliente:Client, lu:string){
     if (!esLUValida(lu)) {
-        console.log("La LU debe estar en formato NNN/YY");
+        escribirEnLog("La LU debe estar en formato NNN/YY");
         return null;
     }
 
     const alumno = await buscarAlumnoPorLU(cliente, lu);
 
     if(alumno.length == 0){
-        console.log(`No existe alumno con libreta ${lu}`);
+        escribirEnLog(`No existe alumno con libreta ${lu}`);
     } else if(alumno[0].titulo_en_tramite === null){
-        console.log(`El alumno de libreta ${lu} no esta tramitando su titulo`);
+        escribirEnLog(`El alumno de libreta ${lu} no esta tramitando su titulo`);
     } else {
         await generarCertificadoAlumno(alumno[0]);
     }
@@ -99,7 +99,7 @@ async function parsearInput(): Promise<{comando:string, argumentos:string[], fun
 }
 
 async function instruccionInvalidaHandler(cliente: Client, comando: string){
-    console.log(`La instruccion ${comando} es invalida`)
+    escribirEnLog(`La instruccion ${comando} es invalida`)
 }
 
 async function parsearInstrucciones(): Promise<{comando:string, argumentos:string[], funcion: Function}[]>{
@@ -129,11 +129,17 @@ async function parsearInstrucciones(): Promise<{comando:string, argumentos:strin
     return comandos;
 }
 
+async function escribirEnLog(informacion: string){
+    const tiempo = new Date().toLocaleString();
+
+    appendFile(archivo_log, tiempo + "-- " + informacion + "\n");
+} 
+
 async function procesarCarpeta(clientDB: Client){
 
     const parametros = await parsearInstrucciones();
     for(const {comando, argumentos, funcion} of parametros){
-        console.log(`Ejecutando ${comando} ${argumentos}`);
+        escribirEnLog(`Ejecutando ${comando} ${argumentos}`);
         await funcion(clientDB, ...argumentos);
     }
 }
