@@ -1,4 +1,5 @@
 import { readFile, truncate} from 'node:fs/promises';
+import {escribirEnLog} from '../cli.ts'
 //Un mutex para atomizar la lectura y borrado
 import lockfile from "proper-lockfile"; //npm install proper-lockfile
 
@@ -25,7 +26,7 @@ async function leerYBorrar(path: string): Promise<string>{
 
 export async function parsearCsv(path:string): Promise<{data:string[], titles:string[]}>{
     if(!path.endsWith(".csv")){
-        console.log("El archivo debe ser un csv");
+        escribirEnLog("El archivo debe ser un csv");
         return {data: [], titles: []};
     }
 

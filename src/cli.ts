@@ -129,7 +129,7 @@ async function parsearInstrucciones(): Promise<{comando:string, argumentos:strin
     return comandos;
 }
 
-async function escribirEnLog(informacion: string){
+export async function escribirEnLog(informacion: string){
     const tiempo = new Date().toLocaleString();
 
     appendFile(archivo_log, tiempo + "-- " + informacion + "\n");

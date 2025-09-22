@@ -1,11 +1,12 @@
 import { Client } from 'pg'; 
+import {escribirEnLog} from '../cli';
 
 function sqlLiteral(literal:string|null): string{
     const res = (literal == null ? `null` : 
                 typeof literal == "string" ? `'${literal.replace(/'/g, `''`)}'` : undefined);
 
     if(res == undefined){
-        console.log(`${literal} no es una entrada valida para la base de datos`);
+        escribirEnLog(`${literal} no es una entrada valida para la base de datos`);
         throw new Error("sqlLiteral invalido");
     }
 
@@ -17,7 +18,7 @@ export async function actualizarTablaAlumnos(client:Client, listaAlumnos:string[
         const datos = linea.split(',').map(value => value.trim());
         const instruccion = `INSERT INTO TP.alumnos (${columnas.join(', ')}) VALUES
                             (${datos.map((dato) => dato === '' ? 'null' : sqlLiteral(dato) ).join(',')})`;
-        console.log(instruccion);
+        escribirEnLog(instruccion);
         await client.query(instruccion);
     }
 }
