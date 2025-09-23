@@ -1,5 +1,5 @@
 import { Client } from 'pg'; 
-import {escribirEnLog} from '../cli';
+import {escribirEnLog} from '../cli.ts';
 
 function sqlLiteral(literal:string|null): string{
     const res = (literal == null ? `null` : 

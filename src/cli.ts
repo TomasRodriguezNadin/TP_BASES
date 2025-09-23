@@ -74,30 +74,6 @@ const instrucciones = [
     {comando: 'lu', cantArgumentos: 1, funcion: generarCertificadoPorLu},
 ];
 
-const prefijoComando = '--';
-
-async function parsearInput(): Promise<{comando:string, argumentos:string[], funcion: Function}[]>{
-    let ind = 0;
-    const cantParametros = process.argv.length;
-    let comandos: {comando: string, argumentos: string[], funcion: Function}[] = [];
-
-    while (ind < cantParametros){
-        const parametro = process.argv[ind];
-        ind++;
-
-        if(parametro.startsWith(prefijoComando)){
-            const comando = parametro.slice(prefijoComando.length);
-            const instruccion = instrucciones.find(ins => ins.comando === comando)
-            if(instruccion == null) throw new Error(`${comando} no es un comando valido`);
-            const argumentos = process.argv.slice(ind, ind + instruccion.cantArgumentos);
-            const funcion = instruccion.funcion;
-            comandos.push({comando, argumentos, funcion});
-        }
-    }
-
-    return comandos;
-}
-
 async function instruccionInvalidaHandler(cliente: Client, comando: string){
     escribirEnLog(`La instruccion ${comando} es invalida`)
 }
@@ -117,7 +93,6 @@ async function parsearInstrucciones(): Promise<{comando:string, argumentos:strin
 
             const instruccion = instrucciones.find(ins => ins.comando === comando);
 
-            //TODO: funciones para handlear instrucciones invalidas y un log
             if(instruccion == null){
                 comandos.push({comando, argumentos: [comando], funcion: instruccionInvalidaHandler});
             }else{
