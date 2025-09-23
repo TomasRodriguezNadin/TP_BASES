@@ -3,6 +3,7 @@ import {readFile, writeFile, readdir, unlink, appendFile} from 'node:fs/promises
 import {actualizarTablaAlumnos, buscarAlumnosPorFecha, buscarAlumnoPorLU} from './acciones/accionesSQL.ts';
 import {parsearCsv} from './acciones/accionesCSV.ts'
 import {archivo_eventos, path_entrada, path_salida, path_plantilla, archivo_log} from './constantes.ts'
+import dotenv from "dotenv";
 
 function comoString(cadena: string|null): string{
     const res = cadena === null ? '' :
@@ -120,6 +121,7 @@ async function procesarCarpeta(clientDB: Client){
 }
 
 async function main(){
+    dotenv.config();
     const clientDB = new Client();
     await clientDB.connect();
 

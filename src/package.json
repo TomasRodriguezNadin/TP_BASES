@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "dotenv": "^17.2.2",
     "fs": "^0.0.1-security",
     "pg": "^8.16.3",
     "promise": "^8.3.0",
@@ -7,6 +8,7 @@
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
+    "@types/dotenv": "^6.1.1",
     "@types/node": "^24.3.1",
     "@types/proper-lockfile": "^4.1.4"
   },
