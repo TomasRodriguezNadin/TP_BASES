@@ -56,17 +56,18 @@ function esLUValida(lu:string): boolean{
 export async function generarCertificadoPorLu(cliente:Client, lu:string): Promise<String>{
     if (!esLUValida(lu)) {
         escribirEnLog("La LU debe estar en formato NNN/YY");
-        return ""; //CAMBIAR
+        return "La LU debe estar en formato NNN/YY"; //CAMBIAR
     }
 
     const alumno = await buscarAlumnoPorLU(cliente, lu);
 
     if(alumno.length == 0){
         escribirEnLog(`No existe alumno con libreta ${lu}`);
+        return `No existe alumno con libreta ${lu}`;
     } else if(alumno[0].titulo_en_tramite === null){
         escribirEnLog(`El alumno de libreta ${lu} no esta tramitando su titulo`);
+        return `El alumno de libreta ${lu} no esta tramitando su titulo`;
     } else {
-
         let res = await generarCertificadoAlumno(alumno[0]);
         return res;
     }
