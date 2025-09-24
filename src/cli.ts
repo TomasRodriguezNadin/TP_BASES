@@ -11,7 +11,7 @@ function comoString(cadena: string|null): string{
     return res;
 }
 
-async function generarCertificadoAlumno(alumno: Record<string, string>) {
+async function generarCertificadoAlumno(alumno: Record<string, string>): Promise<String> {
     let certificado = await readFile(path_plantilla, {encoding: 'utf8'});
     for(const [key, value] of Object.entries(alumno)){
         certificado = certificado.replace(
@@ -23,6 +23,7 @@ async function generarCertificadoAlumno(alumno: Record<string, string>) {
     const outputFile = path_salida + `certificado${alumno.lu.replace("/", "-")}.html`;
     await writeFile(outputFile, certificado, 'utf8');
     escribirEnLog(`Certificado para ${alumno.lu}`);
+    return certificado;
 }
 
 async function cargarAlumnosDesdeCsv(cliente:Client, path:string){
@@ -52,10 +53,10 @@ function esLUValida(lu:string): boolean{
     return /^\d{2,4}\/\d{2}$/.test(lu);
 }
 
-async function generarCertificadoPorLu(cliente:Client, lu:string){
+export async function generarCertificadoPorLu(cliente:Client, lu:string): Promise<String>{
     if (!esLUValida(lu)) {
         escribirEnLog("La LU debe estar en formato NNN/YY");
-        return null;
+        return ""; //CAMBIAR
     }
 
     const alumno = await buscarAlumnoPorLU(cliente, lu);
@@ -65,8 +66,11 @@ async function generarCertificadoPorLu(cliente:Client, lu:string){
     } else if(alumno[0].titulo_en_tramite === null){
         escribirEnLog(`El alumno de libreta ${lu} no esta tramitando su titulo`);
     } else {
-        await generarCertificadoAlumno(alumno[0]);
+
+        let res = await generarCertificadoAlumno(alumno[0]);
+        return res;
     }
+    return ""; //CAMBIAR
 }
 
 const instrucciones = [

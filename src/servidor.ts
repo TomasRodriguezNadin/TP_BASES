@@ -1,7 +1,15 @@
 import express from "express";
+import { Client } from 'pg';
+import dotenv from "dotenv";
+import {generarCertificadoPorLu} from './cli.ts';
+dotenv.config({ debug: true }); // así activás el logeo
+
+dotenv.config();
 
 const app = express()
 const port = 3000
+const clientDB = new Client();
+await clientDB.connect();
 
 app.use(express.json({ limit: '10mb' })); // para poder leer el body
 app.use(express.urlencoded({ extended: true, limit: '10mb'  })); // para poder leer el body
@@ -215,9 +223,16 @@ app.get('/app/archivo-json', (_, res) => {
 // API DEL BACKEND
 var NO_IMPLEMENTADO='<code>ERROR 404 </code> <h1> No implementado aún ⚒<h1>';
 
-app.get('/api/v0/lu/:lu', (req, res) => {
+app.get('/api/v0/lu/:lu', async (req, res) => {
+
+    let html = await generarCertificadoPorLu(clientDB, req.params.lu);
+
     console.log(req.params, req.query, req.body);
-    res.status(404).send(NO_IMPLEMENTADO);
+
+
+    res.send(html);
+    //res.status(404).send(NO_IMPLEMENTADO);
+
 })
 
 app.get('/api/v0/fecha/:fecha', (req, res) => {
