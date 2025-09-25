@@ -36,17 +36,26 @@ function esFechaValida(fecha: string): boolean{
     return /^\d{4}-\d{2}-\d{2}$/.test(fecha); 
 }
 
-async function generarCertificadoPorFecha(cliente:Client, fecha:string) {
+export async function generarCertificadoPorFecha(cliente:Client, fecha:string): Promise<string> {
     if (!esFechaValida(fecha)) {
         escribirEnLog("La fecha debe estar en formato YYYY-MM-DD");
-        return null;
+        return "La fecha debe estar en formato YYYY-MM-DD";
     }
 
-    const alumnos = await buscarAlumnosPorFecha(cliente, fecha);   
+    const alumnos = await buscarAlumnosPorFecha(cliente, fecha);
+
+    let res = "";
 
     for(const alumno of alumnos){
-        generarCertificadoAlumno(alumno);
+        res += await generarCertificadoAlumno(alumno);
+        res += `\n`;
     }
+
+    if(alumnos.length == 0){
+        res += "No hay ningun alumno que se haya egresado en esa fecha";
+    }
+
+    return res;
 }
 
 function esLUValida(lu:string): boolean{

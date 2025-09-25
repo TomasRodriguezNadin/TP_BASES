@@ -1,7 +1,7 @@
 import express from "express";
 import { Client } from 'pg';
 import dotenv from "dotenv";
-import {generarCertificadoPorLu} from './cli.ts';
+import {generarCertificadoPorFecha, generarCertificadoPorLu} from './cli.ts';
 dotenv.config({ debug: true }); // así activás el logeo
 
 dotenv.config();
@@ -235,9 +235,12 @@ app.get('/api/v0/lu/:lu', async (req, res) => {
 
 })
 
-app.get('/api/v0/fecha/:fecha', (req, res) => {
+app.get('/api/v0/fecha/:fecha', async (req, res) => {
     console.log(req.params, req.query, req.body);
-    res.status(404).send(NO_IMPLEMENTADO);
+    const html = await generarCertificadoPorFecha(clientDB, req.params.fecha);
+
+    res.send(html);
+    // res.status(404).send(NO_IMPLEMENTADO);
 })
 
 app.patch('/api/v0/alumnos', (req, res) => {
