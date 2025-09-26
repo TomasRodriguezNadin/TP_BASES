@@ -1,4 +1,6 @@
 tipo,parametro
 archivo,./base/entrada/ejemplo.csv
 lu,72/23
-asdf, 5
+lu,431/23
+lu,a
+asdf,5
