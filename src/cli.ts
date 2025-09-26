@@ -1,30 +1,11 @@
 import { Client } from 'pg';
-import {readFile, writeFile, readdir, unlink, appendFile} from 'node:fs/promises';
+import {writeFile, readdir, unlink, appendFile} from 'node:fs/promises';
 import {actualizarTablaAlumnos, buscarAlumnosPorFecha, buscarAlumnoPorLU} from './acciones/accionesSQL.ts';
 import {parsearCsv} from './acciones/accionesCSV.ts'
-import {archivo_eventos, path_entrada, path_salida, path_plantilla, archivo_log} from './constantes.ts'
+import { esFechaValida } from './acciones/validaciones.ts';
+import {archivo_eventos, path_entrada, path_salida, archivo_log} from './constantes.ts'
 import dotenv from "dotenv";
-
-function comoString(cadena: string|null): string{
-    const res = cadena === null ? '' :
-                cadena;
-    return res;
-}
-
-async function generarCertificadoAlumno(alumno: Record<string, string>): Promise<String> {
-    let certificado = await readFile(path_plantilla, {encoding: 'utf8'});
-    for(const [key, value] of Object.entries(alumno)){
-        certificado = certificado.replace(
-            `[#${key}]`,
-            comoString(value)
-        );
-    }
-
-    const outputFile = path_salida + `certificado${alumno.lu.replace("/", "-")}.html`;
-    await writeFile(outputFile, certificado, 'utf8');
-    escribirEnLog(`Certificado para ${alumno.lu}`);
-    return certificado;
-}
+import {generarCertificadoAlumno, generarCertificadoPorLu} from './acciones/generacionCertificados.ts';
 
 async function cargarAlumnosDesdeCsv(cliente:Client, path:string){
     let {data: listaAlumnos, titles: categories} = await parsearCsv(path);
@@ -32,65 +13,45 @@ async function cargarAlumnosDesdeCsv(cliente:Client, path:string){
     await unlink(path);
 }
 
-function esFechaValida(fecha: string): boolean{
-    return /^\d{4}-\d{2}-\d{2}$/.test(fecha); 
-}
-
-export async function generarCertificadoPorFecha(cliente:Client, fecha:string): Promise<string> {
+async function generarCertificadoPorFecha(cliente:Client, fecha:string){
     if (!esFechaValida(fecha)) {
         escribirEnLog("La fecha debe estar en formato YYYY-MM-DD");
-        return "La fecha debe estar en formato YYYY-MM-DD";
     }
 
     const alumnos = await buscarAlumnosPorFecha(cliente, fecha);
 
-    let res = "";
-
     for(const alumno of alumnos){
-        res += await generarCertificadoAlumno(alumno);
-        res += `\n`;
+        const certificado = await generarCertificadoAlumno(alumno);
+        escribirEnLog(`Generando certificado para ${alumno.lu}`);
+        const outputFile = path_salida + `certificado${alumno.lu.replace("/", "-")}.html`;
+        await writeFile(outputFile, certificado, 'utf8');
     }
 
     if(alumnos.length == 0){
-        res += "No hay ningun alumno que se haya egresado en esa fecha";
+        escribirEnLog("No hay ningun alumno que se haya egresado en esa fecha");
     }
-
-    return res;
 }
 
-function esLUValida(lu:string): boolean{
-    return /^\d{2,4}\/\d{2}$/.test(lu);
-}
-
-export async function generarCertificadoPorLu(cliente:Client, lu:string): Promise<String>{
-    if (!esLUValida(lu)) {
-        escribirEnLog("La LU debe estar en formato NNN/YY");
-        return "La LU debe estar en formato NNN/YY"; //CAMBIAR
+async function generarCertificadoLuRegistrandoEnLog(cliente: Client, lu: string){
+    try{
+        const certificado = await generarCertificadoPorLu(cliente, lu);
+        escribirEnLog(`Certificado para ${lu}`);
+        const outputFile = path_salida + `certificado${lu.replace("/", "-")}.html`;
+        await writeFile(outputFile, certificado, 'utf8');
+    }catch(err){
+        escribirEnLog(err);
+        return;
     }
-
-    const alumno = await buscarAlumnoPorLU(cliente, lu);
-
-    if(alumno.length == 0){
-        escribirEnLog(`No existe alumno con libreta ${lu}`);
-        return `No existe alumno con libreta ${lu}`;
-    } else if(alumno[0].titulo_en_tramite === null){
-        escribirEnLog(`El alumno de libreta ${lu} no esta tramitando su titulo`);
-        return `El alumno de libreta ${lu} no esta tramitando su titulo`;
-    } else {
-        let res = await generarCertificadoAlumno(alumno[0]);
-        return res;
-    }
-    return ""; //CAMBIAR
 }
 
 const instrucciones = [
-    {comando: 'archivo', cantArgumentos: 1, funcion: cargarAlumnosDesdeCsv},
-    {comando: 'fecha', cantArgumentos: 1, funcion: generarCertificadoPorFecha},
-    {comando: 'lu', cantArgumentos: 1, funcion: generarCertificadoPorLu},
+    {comando: 'archivo', funcion: cargarAlumnosDesdeCsv},
+    {comando: 'fecha', funcion: generarCertificadoPorFecha},
+    {comando: 'lu', funcion: generarCertificadoLuRegistrandoEnLog},
 ];
 
 async function instruccionInvalidaHandler(cliente: Client, comando: string){
-    escribirEnLog(`La instruccion ${comando} es invalida`)
+    escribirEnLog(`La instruccion ${comando} es invalida`);
 }
 
 async function parsearInstrucciones(): Promise<{comando:string, argumentos:string[], funcion: Function}[]>{

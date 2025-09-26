@@ -1,7 +1,8 @@
 import express from "express";
 import { Client } from 'pg';
 import dotenv from "dotenv";
-import {generarCertificadoPorFecha, generarCertificadoPorLu} from './cli.ts';
+import { generarCertificadoPorFechaServidor, generarCertificadoPorLuServidor} from './acciones/generacionCertificados.ts';
+import { esFechaValida, esLUValida } from "./acciones/validaciones.ts";
 dotenv.config({ debug: true }); // así activás el logeo
 
 dotenv.config();
@@ -225,21 +226,24 @@ var NO_IMPLEMENTADO='<code>ERROR 404 </code> <h1> No implementado aún ⚒<h1>';
 
 app.get('/api/v0/lu/:lu', async (req, res) => {
 
-    let html = await generarCertificadoPorLu(clientDB, req.params.lu);
-
     console.log(req.params, req.query, req.body);
-
-
-    res.send(html);
+    if(!esLUValida(req.params.lu)){
+        res.send("La LU debe estar en formato NNN/YY");
+    }else{
+        const html = await generarCertificadoPorLuServidor(clientDB, req.params.lu);
+        res.send(html);
+    }
     //res.status(404).send(NO_IMPLEMENTADO);
-
 })
 
 app.get('/api/v0/fecha/:fecha', async (req, res) => {
     console.log(req.params, req.query, req.body);
-    const html = await generarCertificadoPorFecha(clientDB, req.params.fecha);
-
-    res.send(html);
+    if(!esFechaValida(req.params.fecha)){
+        res.send("La fecha debe estar en formato YYYY-MM-DD");
+    }else{
+        const html = await generarCertificadoPorFechaServidor(clientDB, req.params.fecha);
+        res.send(html);
+    }
     // res.status(404).send(NO_IMPLEMENTADO);
 })
 
