@@ -1,7 +1,7 @@
 import express from "express";
 import { Client } from 'pg';
 import dotenv from "dotenv";
-import { generarCertificadoPorFechaServidor, generarCertificadoPorLuServidor} from './acciones/generacionCertificados.ts';
+import { generarCertificadoPorFechaServidor, generarCertificadoPorLuServidor, cargarAlumnosDesdeCsv} from './acciones/generacionCertificados.ts';
 import { esFechaValida, esLUValida } from "./acciones/validaciones.ts";
 dotenv.config({ debug: true }); // así activás el logeo
 
@@ -247,9 +247,14 @@ app.get('/api/v0/fecha/:fecha', async (req, res) => {
     // res.status(404).send(NO_IMPLEMENTADO);
 })
 
-app.patch('/api/v0/alumnos', (req, res) => {
+app.patch('/api/v0/alumnos', async (req, res) => {
     console.log(req.params, req.query, req.body);
-    res.status(404).send(NO_IMPLEMENTADO);
+    try{
+        await cargarAlumnosDesdeCsv(clientDB, req.body);
+        console.log("Alumnos cargados correctamente");
+    }catch(err){
+        console.log(err);
+    }
 })
 
 app.listen(port, () => {

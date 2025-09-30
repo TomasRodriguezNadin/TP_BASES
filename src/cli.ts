@@ -1,17 +1,15 @@
 import { Client } from 'pg';
-import {writeFile, readdir, unlink, appendFile} from 'node:fs/promises';
-import {actualizarTablaAlumnos, buscarAlumnosPorFecha} from './acciones/accionesSQL.ts';
+import {writeFile, readdir, appendFile} from 'node:fs/promises';
+import { buscarAlumnosPorFecha} from './acciones/accionesSQL.ts';
 import {parsearCsv} from './acciones/accionesCSV.ts'
 import { esFechaValida } from './acciones/validaciones.ts';
 import {archivo_eventos, path_entrada, path_salida, archivo_log} from './constantes.ts'
 import dotenv from "dotenv";
-import {generarCertificadoAlumno, generarCertificadoPorLu} from './acciones/generacionCertificados.ts';
+import {generarCertificadoAlumno, generarCertificadoPorLu, cargarAlumnosDesdeCsv} from './acciones/generacionCertificados.ts';
 
-async function cargarAlumnosDesdeCsv(cliente:Client, path:string){
+async function cargarAlumnosDesdeCsvLog(cliente: Client, path: string){
     try{
-        const {data: listaAlumnos, titles: categories} = await parsearCsv(path);
-        await actualizarTablaAlumnos(cliente, listaAlumnos, categories);
-        await unlink(path);
+        await cargarAlumnosDesdeCsv(cliente, path);
     }catch(err){
         escribirEnLog(err);
     }
@@ -48,7 +46,7 @@ async function generarCertificadoLuRegistrandoEnLog(cliente: Client, lu: string)
 }
 
 const instrucciones = [
-    {comando: 'archivo', funcion: cargarAlumnosDesdeCsv},
+    {comando: 'archivo', funcion: cargarAlumnosDesdeCsvLog},
     {comando: 'fecha', funcion: generarCertificadoPorFecha},
     {comando: 'lu', funcion: generarCertificadoLuRegistrandoEnLog},
 ];
@@ -104,7 +102,8 @@ async function procesarCarpeta(clientDB: Client){
 }
 
 async function main(){
-    dotenv.config();
+    dotenv.config({ path: "./.env" });
+    dotenv.config({ path: "./.env.cli" });
     const clientDB = new Client();
     await clientDB.connect();
 

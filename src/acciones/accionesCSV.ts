@@ -1,4 +1,4 @@
-import { readFile, truncate} from 'node:fs/promises';
+import { readFile, truncate, unlink} from 'node:fs/promises';
 //Un mutex para atomizar la lectura y borrado
 import lockfile from "proper-lockfile"; //npm install proper-lockfile
 
@@ -16,24 +16,27 @@ async function leerYBorrar(path: string): Promise<string>{
 
     } finally{
         //Libero el archivo, para que pueda ser escrito por quien quiera
-        await aLiberar(); 
+        await aLiberar();
+        await unlink(path);
     }    
 
     return res;
 
 } 
 
-export async function parsearCsv(path:string): Promise<{data:string[], titles:string[]}>{
-    if(!path.endsWith(".csv")){
-        throw new Error("El archivo debe ser un csv");
+export async function parsearCsv(archivoCsv:string): Promise<{data:string[], titles:string[]}>{
+    if(process.env.CLI){
+        if(!archivoCsv.endsWith(".csv")){
+            throw new Error("El archivo debe ser un csv");
+        }
+
+        archivoCsv = await leerYBorrar(archivoCsv);
     }
 
-    const contents = await leerYBorrar(path);
-
     //const contents = await readFile(path, {encoding: 'utf8'});
-    const firstLine = contents.split(/\r?\n/)[0];
+    const firstLine = archivoCsv.split(/\r?\n/)[0];
     const titles = firstLine.split(',').map(title => title.trim());
-    const data = contents.split(/\r?\n/) // Separa en lineas
+    const data = archivoCsv.split(/\r?\n/) // Separa en lineas
                         .slice(1) // Quita el primer elemento con los titulos
                         .filter(line => line.trim() !== ''); // Elimina las filas que no contienen info
     return {data, titles};
