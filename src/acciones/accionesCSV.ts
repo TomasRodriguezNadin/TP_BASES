@@ -1,5 +1,4 @@
 import { readFile, truncate} from 'node:fs/promises';
-import {escribirEnLog} from '../cli.ts'
 //Un mutex para atomizar la lectura y borrado
 import lockfile from "proper-lockfile"; //npm install proper-lockfile
 

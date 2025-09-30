@@ -1,6 +1,6 @@
 import { Client } from 'pg';
 import {writeFile, readdir, unlink, appendFile} from 'node:fs/promises';
-import {actualizarTablaAlumnos, buscarAlumnosPorFecha, buscarAlumnoPorLU} from './acciones/accionesSQL.ts';
+import {actualizarTablaAlumnos, buscarAlumnosPorFecha} from './acciones/accionesSQL.ts';
 import {parsearCsv} from './acciones/accionesCSV.ts'
 import { esFechaValida } from './acciones/validaciones.ts';
 import {archivo_eventos, path_entrada, path_salida, archivo_log} from './constantes.ts'
@@ -32,7 +32,7 @@ async function generarCertificadoPorFecha(cliente:Client, fecha:string){
     }
 
     if(alumnos.length == 0){
-        escribirEnLog("No hay ningun alumno que se haya egresado en esa fecha");
+        escribirEnLog(`No hay ningun alumno que se haya egresado en la fecha ${fecha}`);
     }
 }
 
@@ -88,7 +88,7 @@ async function parsearInstrucciones(): Promise<{comando:string, argumentos:strin
     return comandos;
 }
 
-export async function escribirEnLog(informacion: string){
+async function escribirEnLog(informacion: string){
     const tiempo = new Date().toLocaleString();
 
     appendFile(archivo_log, tiempo + "-- " + informacion + "\n");
@@ -109,15 +109,13 @@ async function main(){
     await clientDB.connect();
 
     //ejecutar cada 2 segundos
-    const intervalo = setInterval(async () => {
+    setInterval(async () => {
         try {
             await procesarCarpeta(clientDB);
         } catch (err) {
             console.error("Error al procesar carpeta:", err);
         }
     }, 2000);
-    
-    //await clientDB.end();
 }
 
 main();
