@@ -26,8 +26,7 @@ async function leerYBorrar(path: string): Promise<string>{
 
 export async function parsearCsv(path:string): Promise<{data:string[], titles:string[]}>{
     if(!path.endsWith(".csv")){
-        escribirEnLog("El archivo debe ser un csv");
-        return {data: [], titles: []};
+        throw new Error("El archivo debe ser un csv");
     }
 
     const contents = await leerYBorrar(path);

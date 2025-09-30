@@ -8,9 +8,13 @@ import dotenv from "dotenv";
 import {generarCertificadoAlumno, generarCertificadoPorLu} from './acciones/generacionCertificados.ts';
 
 async function cargarAlumnosDesdeCsv(cliente:Client, path:string){
-    let {data: listaAlumnos, titles: categories} = await parsearCsv(path);
-    await actualizarTablaAlumnos(cliente, listaAlumnos, categories);
-    await unlink(path);
+    try{
+        const {data: listaAlumnos, titles: categories} = await parsearCsv(path);
+        await actualizarTablaAlumnos(cliente, listaAlumnos, categories);
+        await unlink(path);
+    }catch(err){
+        escribirEnLog(err);
+    }
 }
 
 async function generarCertificadoPorFecha(cliente:Client, fecha:string){
@@ -40,7 +44,6 @@ async function generarCertificadoLuRegistrandoEnLog(cliente: Client, lu: string)
         await writeFile(outputFile, certificado, 'utf8');
     }catch(err){
         escribirEnLog(err);
-        return;
     }
 }
 
@@ -60,7 +63,12 @@ async function parsearInstrucciones(): Promise<{comando:string, argumentos:strin
 
     if(archivos.length > 0){ 
 
-        const {data} = await parsearCsv(archivo_eventos);
+        try{
+            var {data} = await parsearCsv(archivo_eventos);
+        }catch(err){
+            escribirEnLog(err);
+            var data: string[] = [];
+        }
 
         for (const linea of data){
             const parametros = linea.split(",");
