@@ -1,4 +1,4 @@
-export interface Alumno {
+export type Alumno = {
     lu: string;
     nombre: string;
     apellido: string;

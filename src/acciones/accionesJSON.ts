@@ -1,13 +1,5 @@
 import { parsearCsv } from "./accionesCSV.ts";
-
-interface Alumno {
-    lu: string;
-    nombre: string;
-    apellido: string;
-    titulo: string;
-    titulo_en_tramite: string;
-    egreso: string;
-}
+import type {Alumno} from "../tipos.ts";
 
 export async function csvAJson(archivoCsv: string): Promise<string>{
     const {data, titles} = await parsearCsv(archivoCsv);

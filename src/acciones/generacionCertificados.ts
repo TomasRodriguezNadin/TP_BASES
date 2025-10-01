@@ -4,15 +4,7 @@ import { path_plantilla } from '../constantes.ts';
 import { esLUValida, esFechaValida } from './validaciones.ts';
 import { buscarAlumnoPorLU, buscarAlumnosPorFecha, actualizarTablaAlumnos, actualizarTablaAlumnosJSON } from './accionesSQL.ts';
 import { parsearCsv } from './accionesCSV.ts';
-
-interface Alumno {
-    lu: string;
-    nombre: string;
-    apellido: string;
-    titulo: string;
-    titulo_en_tramite: string;
-    egreso: string;
-}
+import type {Alumno} from '../tipos.ts';
 
 function comoString(cadena: string|null): string{
     const res = cadena === null ? '' :

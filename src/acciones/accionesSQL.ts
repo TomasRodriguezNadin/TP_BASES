@@ -1,13 +1,6 @@
 import { Client } from 'pg'; 
+import type {Alumno} from '../tipos.ts';
 
- interface Alumno {
-    lu: string;
-    nombre: string;
-    apellido: string;
-    titulo: string;
-    titulo_en_tramite: string;
-    egreso: string;
-}
 
 function sqlLiteral(literal:string|null): string{
     const res = (literal == null ? `null` : 
