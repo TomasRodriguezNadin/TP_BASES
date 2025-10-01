@@ -22,6 +22,3 @@ export async function csvAJson(archivoCsv: string): Promise<string>{
     }
     return JSON.stringify(alumnos, null, 2);
 }
-
-
-export async function parsearJSON(json: string)

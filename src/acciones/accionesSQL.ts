@@ -1,5 +1,14 @@
 import { Client } from 'pg'; 
 
+ interface Alumno {
+    lu: string;
+    nombre: string;
+    apellido: string;
+    titulo: string;
+    titulo_en_tramite: string;
+    egreso: string;
+}
+
 function sqlLiteral(literal:string|null): string{
     const res = (literal == null ? `null` : 
                 typeof literal == "string" ? `'${literal.replace(/'/g, `''`)}'` : undefined);
@@ -17,6 +26,19 @@ export async function actualizarTablaAlumnos(client:Client, listaAlumnos:string[
         const instruccion = `INSERT INTO TP.alumnos (${columnas.join(', ')}) VALUES
                             (${datos.map((dato) => dato === '' ? 'null' : sqlLiteral(dato) ).join(',')})`;
         await client.query(instruccion);
+    }
+}
+
+
+export async function actualizarTablaAlumnosJSON(cliente: Client, listaAlumnos: Alumno[]){
+    const query = `INSERT INTO TP.alumnos (lu,nombre,apellido,titulo,titulo_en_tramite,egreso)
+                    VALUES (#[lu],#[nombre],#[apellido],#[titulo],#[titulo_en_tramite],#[egreso])`;
+    for(const alumno of listaAlumnos){
+        let queryAlumno = query;
+        for(const [key, value] of Object.entries(alumno)){
+            queryAlumno = queryAlumno.replace(`#[${key}]`, value === '' ? 'null' : sqlLiteral(value) );
+        }
+        await cliente.query(queryAlumno);
     }
 }
 
