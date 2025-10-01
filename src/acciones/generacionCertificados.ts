@@ -16,6 +16,10 @@ export async function cargarAlumnosDesdeCsv(cliente:Client, path:string){
     await actualizarTablaAlumnos(cliente, listaAlumnos, categories);
 }
 
+export async function cargarAlumnosDesdeJSON(cliente: Client, json: string){
+    const alumnos: Alumno[] = JSON.parse(json);
+}
+
 export async function generarCertificadoAlumno(alumno: Record<string, string>): Promise<String> {
     let certificado = await readFile(path_plantilla, {encoding: 'utf8'});
     for(const [key, value] of Object.entries(alumno)){

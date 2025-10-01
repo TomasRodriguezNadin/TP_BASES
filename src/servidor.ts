@@ -3,6 +3,7 @@ import { Client } from 'pg';
 import dotenv from "dotenv";
 import { generarCertificadoPorFechaServidor, generarCertificadoPorLuServidor, cargarAlumnosDesdeCsv} from './acciones/generacionCertificados.ts';
 import { esFechaValida, esLUValida } from "./acciones/validaciones.ts";
+import {csvAJson} from "./acciones/accionesJSON.ts";
 dotenv.config({ debug: true }); // así activás el logeo
 
 dotenv.config();
@@ -125,14 +126,23 @@ const HTML_ARCHIVO=
       }
 
       const text = await file.text();
-
-      try {
-        const response = await fetch('../api/v0/alumnos', {
+      const response = await fetch('../api/v0/csvAJSON', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'text/csv'
           },
           body: text
+      });
+
+      const json = await response.json();
+
+      try {
+        const response = await fetch('../api/v0/alumnos', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(json)
         });
 
         if (response.ok) {
@@ -149,6 +159,11 @@ const HTML_ARCHIVO=
 </body>
 </html>
 `;
+
+app.patch('/api/v0/csvAJSON', async (req, res) => {
+    const json = await csvAJson(req.body);
+    res.send(json);
+})
 
 app.get('/app/archivo', (_, res) => {
     res.send(HTML_ARCHIVO)
@@ -249,12 +264,14 @@ app.get('/api/v0/fecha/:fecha', async (req, res) => {
 
 app.patch('/api/v0/alumnos', async (req, res) => {
     console.log(req.params, req.query, req.body);
-    try{
-        await cargarAlumnosDesdeCsv(clientDB, req.body);
-        console.log("Alumnos cargados correctamente");
-    }catch(err){
-        console.log(err);
-    }
+    //try{
+    //   const json = await csvAJson(req.body);
+    //    await cargarAlumnosDesdeJson(clientDB, json);
+        // await cargarAlumnosDesdeCsv(clientDB, req.body);
+    //    console.log("Alumnos cargados correctamente");
+    //}catch(err){
+    //    console.log(err);
+    //}
 })
 
 app.listen(port, () => {
