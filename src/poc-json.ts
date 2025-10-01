@@ -6,8 +6,8 @@ interface Alumno {
     nombre: string;
     apellido: string;
     titulo: string;
-    titulo_en_tramite: string;
-    egreso: string;
+    titulo_en_tramite: string | null;
+    egreso: string | null;
 }
 
 
@@ -18,7 +18,11 @@ async function csvAJson(archivoCsv: string): Promise<Alumno[]>{
         const lineaParseada = linea.split(",").map(value => value.trim());
         let alumno: any = {};
         titles.forEach((title: string, i: number) => {
-            alumno[title] = lineaParseada[i];
+            let valor: string | null = lineaParseada[i];
+            if (valor == ''){
+                valor = null;
+            }
+            alumno[title] = valor;
         });
         alumnos.push(alumno as Alumno);
     }
