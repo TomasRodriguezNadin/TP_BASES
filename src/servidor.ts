@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { generarCertificadoPorFechaServidor, generarCertificadoPorLuServidor, cargarAlumnosDesdeJSON} from './acciones/generacionCertificados.ts';
 import { esFechaValida, esLUValida } from "./acciones/validaciones.ts";
 import {csvAJson} from "./acciones/accionesJSON.ts";
+import {actualizarTablaAlumnosJSON} from "./acciones/accionesSQL.ts";
 dotenv.config({ debug: true }); // así activás el logeo
 
 dotenv.config();
@@ -266,7 +267,7 @@ app.patch('/api/v0/alumnos', async (req, res) => {
     console.log(req.params, req.query, req.body);
     try{
         // const json = JSON.parse(req.body);
-        await cargarAlumnosDesdeJSON(clientDB, req.body);
+        await actualizarTablaAlumnosJSON(clientDB, req.body);
         // await cargarAlumnosDesdeCsv(clientDB, req.body);
         console.log("Alumnos cargados correctamente");
     }catch(err){

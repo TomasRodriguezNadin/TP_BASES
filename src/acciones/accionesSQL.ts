@@ -1,7 +1,6 @@
 import { Client } from 'pg'; 
 import type {Alumno} from '../tipos.ts';
 
-
 function sqlLiteral(literal:string|null): string{
     const res = (literal == null ? `null` : 
                 typeof literal == "string" ? `'${literal.replace(/'/g, `''`)}'` : undefined);
