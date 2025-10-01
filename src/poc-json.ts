@@ -6,27 +6,23 @@ interface Alumno {
     nombre: string;
     apellido: string;
     titulo: string;
-    titulo_en_tramite: string | null;
-    egreso: string | null;
+    titulo_en_tramite: string;
+    egreso: string;
 }
 
 
-async function csvAJson(archivoCsv: string): Promise<Alumno[]>{
+async function csvAJson(archivoCsv: string): Promise<string>{
     const {data, titles} = await parsearCsv(archivoCsv);
     let alumnos: Alumno[] = [];
     for (const linea of data){
         const lineaParseada = linea.split(",").map(value => value.trim());
         let alumno: any = {};
         titles.forEach((title: string, i: number) => {
-            let valor: string | null = lineaParseada[i];
-            if (valor == ''){
-                valor = null;
-            }
-            alumno[title] = valor;
+            alumno[title] = lineaParseada[i];
         });
         alumnos.push(alumno as Alumno);
     }
-    return alumnos;
+    return JSON.stringify(alumnos, null, 2);
 }
 
 
