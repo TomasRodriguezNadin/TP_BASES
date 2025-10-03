@@ -45,18 +45,9 @@ export async function generarCertificadoPorLu(cliente:Client, lu:string): Promis
     return res;
 }
 
-export async function generarCertificadoPorLuServidor(cliente: Client, lu: string): Promise<String>{
-    try{
-        const certificado = await generarCertificadoPorLu(cliente, lu);
-        return certificado;
-    }catch(err){
-        return err.message;
-    }
-}
-
 export async function generarCertificadoPorFechaServidor(cliente:Client, fecha:string): Promise<string> {
     if (!esFechaValida(fecha)) {
-        return "La fecha debe estar en formato YYYY-MM-DD";
+        throw new  Error("La fecha debe estar en formato YYYY-MM-DD");
     }
 
     const alumnos = await buscarAlumnosPorFecha(cliente, fecha);

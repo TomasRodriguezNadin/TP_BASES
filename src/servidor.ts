@@ -1,13 +1,13 @@
 import express from "express";
 import { Client } from 'pg';
 import dotenv from "dotenv";
-import { generarCertificadoPorFechaServidor, generarCertificadoPorLuServidor, cargarAlumnosDesdeJSON} from './acciones/generacionCertificados.ts';
+import { generarCertificadoPorFechaServidor, generarCertificadoPorLu} from './acciones/generacionCertificados.ts';
 import { esFechaValida, esLUValida } from "./acciones/validaciones.ts";
 import {csvAJson} from "./acciones/accionesJSON.ts";
 import {actualizarTablaAlumnosJSON} from "./acciones/accionesSQL.ts";
+import { warn } from "node:console";
 dotenv.config({ debug: true }); // así activás el logeo
 
-dotenv.config();
 
 const app = express()
 const port = 3000
@@ -18,18 +18,6 @@ app.use(express.json({ limit: '10mb' })); // para poder leer el body
 app.use(express.urlencoded({ extended: true, limit: '10mb'  })); // para poder leer el body
 app.use(express.text({ type: 'text/csv', limit: '10mb' })); // para poder leer el body como texto plano
 
-// endpoint de prueba
-app.get('/ask', (req, res) => {
-    var htmlResponse = '<!doctype html>\n<html>\n<head>\n<meta charset="utf8">\n</head>\n<body>';
-    if (JSON.stringify(req.query).length > 2) {
-        htmlResponse += '<div>Yes ' + JSON.stringify(req.query) + '</div>';
-    }
-    if (req.body) {
-        htmlResponse += '<div>Body: ' + JSON.stringify(req.body) + '</div>';
-    }
-    htmlResponse + '</body></html>'
-    res.send(htmlResponse);
-})
 
 // Servidor del frontend:
 const HTML_MENU=
@@ -43,8 +31,7 @@ const HTML_MENU=
         <p>menu</p>
         <p><a href="/app/lu">Imprimir certificado por LU</a></p>
         <p><a href="/app/fecha">Imprimir certificado por fecha de trámite</a></p>
-        <p><a href="/app/archivo">Subir .csv con novedades de alumnos</a></p>
-        <p><a href="/ask?p=np">¿Es P = NP?</a></p>
+        <p><a href="/app/archivo-json">Subir .csv con novedades de alumnos</a></p>
     </body>
 </html>
 `;
@@ -103,71 +90,6 @@ const HTML_FECHA=
 
 app.get('/app/fecha', (_, res) => {
     res.send(HTML_FECHA)
-})
-
-const HTML_ARCHIVO=
-`<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>CSV Upload</title>
-</head>
-<body>
-  <h2>Subir archivo CSV</h2>
-  <input type="file" id="csvFile" accept=".csv" />
-  <button onclick="handleUpload()">Procesar y Enviar</button>
-
-  <script>
-    async function handleUpload() {
-      const fileInput = document.getElementById('csvFile');
-      const file = fileInput.files[0];
-      if (!file) {
-        alert('Por favor seleccioná un archivo CSV.');
-        return;
-      }
-
-      const text = await file.text();
-      const response = await fetch('../api/v0/csvAJSON', {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'text/csv'
-          },
-          body: text
-      });
-
-      const json = await response.json();
-
-      try {
-        const response = await fetch('../api/v0/alumnos', {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(json)
-        });
-
-        if (response.ok) {
-          alert('Datos enviados correctamente.');
-        } else {
-          alert('Error al enviar los datos.');
-        }
-      } catch (error) {
-        console.error('Error en la solicitud:', error);
-        alert('Error de red o en el servidor.');
-      }
-    }
-  </script>
-</body>
-</html>
-`;
-
-app.patch('/api/v0/csvAJSON', async (req, res) => {
-    const json = await csvAJson(req.body);
-    res.send(json);
-})
-
-app.get('/app/archivo', (_, res) => {
-    res.send(HTML_ARCHIVO)
 })
 
 const HTML_ARCHIVO_JSON=
@@ -239,26 +161,26 @@ app.get('/app/archivo-json', (_, res) => {
 
 // API DEL BACKEND
 var NO_IMPLEMENTADO='<code>ERROR 404 </code> <h1> No implementado aún ⚒<h1>';
+const ERROR = '<code>ERROR 404 </code> <h1> error <h1>';
 
 app.get('/api/v0/lu/:lu', async (req, res) => {
 
     console.log(req.params, req.query, req.body);
-    if(!esLUValida(req.params.lu)){
-        res.send("La LU debe estar en formato NNN/YY");
-    }else{
-        const html = await generarCertificadoPorLuServidor(clientDB, req.params.lu);
+    try{
+        const html = await generarCertificadoPorLu(clientDB, req.params.lu);
         res.send(html);
+    }catch(err){
+        res.status(404).send(ERROR.replace("error", err));
     }
-    //res.status(404).send(NO_IMPLEMENTADO);
 })
 
 app.get('/api/v0/fecha/:fecha', async (req, res) => {
     console.log(req.params, req.query, req.body);
-    if(!esFechaValida(req.params.fecha)){
-        res.send("La fecha debe estar en formato YYYY-MM-DD");
-    }else{
+    try{
         const html = await generarCertificadoPorFechaServidor(clientDB, req.params.fecha);
         res.send(html);
+    }catch(err){
+        res.status(404).send(ERROR.replace("error", err.message));
     }
     // res.status(404).send(NO_IMPLEMENTADO);
 })
@@ -271,7 +193,7 @@ app.patch('/api/v0/alumnos', async (req, res) => {
         // await cargarAlumnosDesdeCsv(clientDB, req.body);
         console.log("Alumnos cargados correctamente");
     }catch(err){
-        console.log(err);
+        res.status(404).send(ERROR.replace("error", err.message));
     }
 })
 
