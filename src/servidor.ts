@@ -4,15 +4,14 @@ import dotenv from "dotenv";
 import { generarCertificadoPorFechaServidor, generarCertificadoPorLu} from './acciones/generacionCertificados.ts';
 import { esFechaValida, esLUValida } from "./acciones/validaciones.ts";
 import {csvAJson} from "./acciones/accionesJSON.ts";
-import {actualizarTablaAlumnosJSON} from "./acciones/accionesSQL.ts";
+import {actualizarTablaAlumnosJSON, buscarAlumnoPorLU} from "./acciones/accionesSQL.ts";
 import { warn } from "node:console";
+import type { Alumno } from "./tipos.ts";
 dotenv.config({ debug: true }); // así activás el logeo
 
 
 const app = express()
 const port = 3000
-const clientDB = new Client();
-await clientDB.connect();
 
 app.use(express.json({ limit: '10mb' })); // para poder leer el body
 app.use(express.urlencoded({ extended: true, limit: '10mb'  })); // para poder leer el body
@@ -163,38 +162,48 @@ app.get('/app/archivo-json', (_, res) => {
 var NO_IMPLEMENTADO='<code>ERROR 404 </code> <h1> No implementado aún ⚒<h1>';
 const ERROR = '<code>ERROR 404 </code> <h1> error <h1>';
 
-app.get('/api/v0/lu/:lu', async (req, res) => {
+async function enviarHTML(parametro: string, cliente: Client, generador: Function, res){
+    const html = await generador(cliente, parametro);
+    res.send(html);
+}
 
+async function enviarHTMLLU(parametro: string, cliente: Client, res){
+    await enviarHTML(parametro, cliente, generarCertificadoPorLu, res);
+}
+
+async function enviarHTMLFecha(parametro: string, cliente: Client, res){
+    await enviarHTML(parametro, cliente, generarCertificadoPorFechaServidor, res);
+}
+
+async function cargarAlumnosJSON(parametro: Alumno[], cliente: Client, res){
+    await actualizarTablaAlumnosJSON(cliente, parametro);
+    console.log("Alumnos cargados correctamente");
+}
+
+async function atenderPedido(respuesta: Function, parametro: string | Alumno[], req, res){
     console.log(req.params, req.query, req.body);
+    const clientDB = new Client();
+    await clientDB.connect();
+
     try{
-        const html = await generarCertificadoPorLu(clientDB, req.params.lu);
-        res.send(html);
+        await respuesta(parametro, clientDB, res)
     }catch(err){
         res.status(404).send(ERROR.replace("error", err));
+    }finally{
+        await clientDB.end();
     }
+}
+
+app.get('/api/v0/lu/:lu', async (req, res) => {
+    await atenderPedido(enviarHTMLLU, req.params.lu, req, res);
 })
 
 app.get('/api/v0/fecha/:fecha', async (req, res) => {
-    console.log(req.params, req.query, req.body);
-    try{
-        const html = await generarCertificadoPorFechaServidor(clientDB, req.params.fecha);
-        res.send(html);
-    }catch(err){
-        res.status(404).send(ERROR.replace("error", err.message));
-    }
-    // res.status(404).send(NO_IMPLEMENTADO);
+    await atenderPedido(enviarHTMLFecha, req.params.fecha, req, res)
 })
 
 app.patch('/api/v0/alumnos', async (req, res) => {
-    console.log(req.params, req.query, req.body);
-    try{
-        // const json = JSON.parse(req.body);
-        await actualizarTablaAlumnosJSON(clientDB, req.body);
-        // await cargarAlumnosDesdeCsv(clientDB, req.body);
-        console.log("Alumnos cargados correctamente");
-    }catch(err){
-        res.status(404).send(ERROR.replace("error", err.message));
-    }
+    await atenderPedido(cargarAlumnosJSON, req.body, req, res);
 })
 
 app.listen(port, () => {
