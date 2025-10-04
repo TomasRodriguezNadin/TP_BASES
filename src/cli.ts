@@ -1,66 +1,20 @@
-import { Client } from 'pg';
-import {writeFile, readdir, appendFile} from 'node:fs/promises';
-import { buscarAlumnosPorFecha} from './acciones/accionesSQL.ts';
+import { readdir } from 'node:fs/promises';
 import {parsearCsv} from './acciones/accionesCSV.ts'
-import { esFechaValida } from './acciones/validaciones.ts';
-import {archivo_eventos, path_entrada, path_salida, archivo_log} from './constantes.ts'
+import {archivo_eventos, path_entrada } from './constantes.ts'
+import { escribirEnLog, instrucciones, instruccionInvalidaHandler } from './acciones/accionesLog.ts';
 import dotenv from "dotenv";
-import {generarCertificadoAlumno, generarCertificadoPorLu, cargarAlumnosDesdeCsv} from './acciones/generacionCertificados.ts';
 
-async function cargarAlumnosDesdeCsvLog(cliente: Client, path: string){
-    try{
-        await cargarAlumnosDesdeCsv(cliente, path);
-    }catch(err){
-        escribirEnLog(err);
-    }
+type operacion = {
+    comando: string,
+    argumentos: string[],
+    funcion: Function
 }
 
-async function generarCertificadoPorFecha(cliente:Client, fecha:string){
-    if (!esFechaValida(fecha)) {
-        escribirEnLog("La fecha debe estar en formato YYYY-MM-DD");
-    }
-
-    const alumnos = await buscarAlumnosPorFecha(cliente, fecha);
-
-    for(const alumno of alumnos){
-        const certificado = await generarCertificadoAlumno(alumno);
-        escribirEnLog(`Generando certificado para ${alumno.lu}`);
-        const outputFile = path_salida + `certificado${alumno.lu.replace("/", "-")}.html`;
-        await writeFile(outputFile, certificado, 'utf8');
-    }
-
-    if(alumnos.length == 0){
-        escribirEnLog(`No hay ningun alumno que se haya egresado en la fecha ${fecha}`);
-    }
-}
-
-async function generarCertificadoLuRegistrandoEnLog(cliente: Client, lu: string){
-    try{
-        const certificado = await generarCertificadoPorLu(cliente, lu);
-        escribirEnLog(`Certificado para ${lu}`);
-        const outputFile = path_salida + `certificado${lu.replace("/", "-")}.html`;
-        await writeFile(outputFile, certificado, 'utf8');
-    }catch(err){
-        escribirEnLog(err);
-    }
-}
-
-const instrucciones = [
-    {comando: 'archivo', funcion: cargarAlumnosDesdeCsvLog},
-    {comando: 'fecha', funcion: generarCertificadoPorFecha},
-    {comando: 'lu', funcion: generarCertificadoLuRegistrandoEnLog},
-];
-
-async function instruccionInvalidaHandler(cliente: Client, comando: string){
-    escribirEnLog(`La instruccion ${comando} es invalida`);
-}
-
-async function parsearInstrucciones(): Promise<{comando:string, argumentos:string[], funcion: Function}[]>{
+async function parsearInstrucciones(): Promise<operacion[]>{
     const archivos = await readdir(path_entrada);
-    let comandos: {comando: string, argumentos: string[], funcion: Function}[] = [];
+    let comandos: operacion[] = [];
 
     if(archivos.length > 0){ 
-
         try{
             var {data} = await parsearCsv(archivo_eventos);
         }catch(err){
@@ -86,31 +40,22 @@ async function parsearInstrucciones(): Promise<{comando:string, argumentos:strin
     return comandos;
 }
 
-async function escribirEnLog(informacion: string){
-    const tiempo = new Date().toLocaleString();
-
-    appendFile(archivo_log, tiempo + "-- " + informacion + "\n");
-} 
-
-async function procesarCarpeta(clientDB: Client){
-
-    const parametros = await parsearInstrucciones();
+async function procesarCarpeta(parametros: operacion[]){
     for(const {comando, argumentos, funcion} of parametros){
         escribirEnLog(`Ejecutando ${comando} ${argumentos}`);
-        await funcion(clientDB, ...argumentos);
+        await funcion(...argumentos);
     }
 }
 
 async function main(){
     dotenv.config({ path: "./.env" });
     dotenv.config({ path: "./.env.cli" });
-    const clientDB = new Client();
-    await clientDB.connect();
 
     //ejecutar cada 2 segundos
     setInterval(async () => {
         try {
-            await procesarCarpeta(clientDB);
+            const parametros = await parsearInstrucciones();
+            await procesarCarpeta(parametros);
         } catch (err) {
             console.error("Error al procesar carpeta:", err);
         }

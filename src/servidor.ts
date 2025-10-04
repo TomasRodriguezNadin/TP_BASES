@@ -2,8 +2,6 @@ import express from "express";
 import { Client } from 'pg';
 import dotenv from "dotenv";
 import { generarCertificadoPorFechaServidor, generarCertificadoPorLu} from './acciones/generacionCertificados.ts';
-import { esFechaValida, esLUValida } from "./acciones/validaciones.ts";
-import {csvAJson} from "./acciones/accionesJSON.ts";
 import {actualizarTablaAlumnosJSON, buscarAlumnoPorLU} from "./acciones/accionesSQL.ts";
 import { warn } from "node:console";
 import type { Alumno } from "./tipos.ts";
