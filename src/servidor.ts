@@ -1,9 +1,12 @@
 import express from "express";
 import { Client } from 'pg';
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "node:url";
 import { generarCertificadoPorFechaServidor, generarCertificadoPorLu} from './acciones/generacionCertificados.ts';
 import {actualizarTablaAlumnosJSON, buscarAlumnoPorLU} from "./acciones/accionesSQL.ts";
 import { warn } from "node:console";
+import { generarCRUD } from "./crud.ts";
 import type { Alumno } from "./tipos.ts";
 dotenv.config({ debug: true }); // así activás el logeo
 
@@ -29,6 +32,7 @@ const HTML_MENU=
         <p><a href="/app/lu">Imprimir certificado por LU</a></p>
         <p><a href="/app/fecha">Imprimir certificado por fecha de trámite</a></p>
         <p><a href="/app/archivo-json">Subir .csv con novedades de alumnos</a></p>
+        <p><a href="/app/alumnos">Ver tabla de alumnos</a></p>
     </body>
 </html>
 `;
@@ -156,6 +160,13 @@ app.get('/app/archivo-json', (_, res) => {
 })
 
 
+app.get('/app/alumnos', (_, res) => {
+    const fileName = fileURLToPath(import.meta.url);
+    const dirName = path.dirname(fileName);
+    res.sendFile(path.join(dirName, "alumnos.html"));
+})
+
+
 // API DEL BACKEND
 var NO_IMPLEMENTADO='<code>ERROR 404 </code> <h1> No implementado aún ⚒<h1>';
 const ERROR = '<code>ERROR 404 </code> <h1> error <h1>';
@@ -203,6 +214,8 @@ app.get('/api/v0/fecha/:fecha', async (req, res) => {
 app.patch('/api/v0/alumnos', async (req, res) => {
     await atenderPedido(cargarAlumnosJSON, req.body, req, res);
 })
+
+await generarCRUD(app);
 
 app.listen(port, () => {
     console.log(`Example app listening on port http://localhost:${port}/app/menu`)
