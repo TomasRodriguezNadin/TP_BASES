@@ -70,10 +70,11 @@
       const nuevoTramite = prompt('Título en trámite:', titulo_en_tramite);
       const nuevoEgreso = prompt('Egreso:', egreso);
       if (!nuevoNombre || !nuevoApellido) return;
-      await fetch(`${API_URL}/${lu}`, {
+      await fetch(`${API_URL}/${encodeURIComponent(lu)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          lu: lu,
           nombre: nuevoNombre,
           apellido: nuevoApellido,
           titulo: nuevoTitulo,

@@ -14,6 +14,19 @@ function sqlLiteral(literal:string|null): string{
     return res;
 }
 
+export async function editarAlumnoDeTabla(client: Client, alumno: Alumno){
+    let consulta = `UPDATE tp.alumnos
+                      SET`;
+    const entradasSinLU = Object.entries(alumno).filter(([key, _]) => {return key !== `lu`});
+    for (const [key, value] of entradasSinLU){
+        consulta += ` ${key} = ${sqlLiteral(value)},`
+    }
+    // Para sacar la coma al final
+    consulta = consulta.slice(0, -1);
+    consulta += `\n WHERE lu=${sqlLiteral(alumno.lu)}`;
+    await client.query(consulta);
+}
+
 export async function actualizarTablaAlumnos(client:Client, listaAlumnos:string[], columnas:string[]){
     for(const linea of listaAlumnos){
         const datos = linea.split(',').map(value => value.trim());

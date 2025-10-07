@@ -1,6 +1,6 @@
 import * as Express from "express";
 import { Client } from 'pg';
-import { actualizarTablaAlumnosJSON, borrarAlumnoDeLaTabla, buscarTodosLosAlumnos } from "./acciones/accionesSQL.ts";
+import { actualizarTablaAlumnosJSON, borrarAlumnoDeLaTabla, buscarTodosLosAlumnos, editarAlumnoDeTabla } from "./acciones/accionesSQL.ts";
 
 async function obtenerAlumnos(cliente: Client, req, res){
     console.log("Obteniendo los alumnos");
@@ -19,6 +19,13 @@ async function agregarAlumno(cliente: Client, req, res){
 async function borrarAlumno(cliente: Client, req, res){
     console.log(`Borrando alumno con lu: ${req.params.lu}`);
     await borrarAlumnoDeLaTabla(cliente, req.params.lu);
+    res.json("OK");
+}
+
+async function editarAlumno(cliente: Client, req, res){
+    const alumno = req.body;
+    console.log(`Editando alumno ${alumno.lu}`);
+    await editarAlumnoDeTabla(cliente, alumno);
     res.json("OK");
 }
 
@@ -48,5 +55,9 @@ export async function generarCRUD(app: Express.Application, ruta: string){
 
     app.delete(`${ruta}/:lu`, async (req, res) => {
         await realizarOperacionCRUD(borrarAlumno, "Error al borrar al alumno", req, res);
+    })
+
+    app.put(`${ruta}/:lu`, async (req, res) => {
+        await realizarOperacionCRUD(editarAlumno, "Error al editar el alumno", req, res);
     })
 }
