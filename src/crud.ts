@@ -1,53 +1,52 @@
 import * as Express from "express";
 import { Client } from 'pg';
-import { actualizarTablaAlumnosJSON, borrarAlumnoDeLaTabla } from "./acciones/accionesSQL.ts";
+import { actualizarTablaAlumnosJSON, borrarAlumnoDeLaTabla, buscarTodosLosAlumnos } from "./acciones/accionesSQL.ts";
 
-export async function generarCRUD(app: Express.Application){
+async function obtenerAlumnos(cliente: Client, req, res){
+    console.log("Obteniendo los alumnos");
+    const tabla = await buscarTodosLosAlumnos(cliente);
+    console.log(tabla);
+    res.json(tabla);
+}
 
-    app.get("/api/alumnos", async (_, res) => {
-        const cliente = new Client();
-        await cliente.connect();
-        const consulta = `SELECT * FROM tp.alumnos`;
-        try{
-            const tabla = await cliente.query(consulta);
-            console.log(tabla.rows);
-            res.json(tabla.rows);
-        }catch(err){
-            console.log(`Error al listar los alumnos ${err}`);
-            res.status(500).json({ error : "Error al cargar los alumnos"});
-        }finally{
-            await cliente.end();
-        }
+async function agregarAlumno(cliente: Client, req, res){
+    const alumno = req.body;
+    console.log("Recibiendo alumno");
+    await actualizarTablaAlumnosJSON(cliente, [alumno]);
+    res.json("OK");
+}
+
+async function borrarAlumno(cliente: Client, req, res){
+    console.log(`Borrando alumno con lu: ${req.params.lu}`);
+    await borrarAlumnoDeLaTabla(cliente, req.params.lu);
+    res.json("OK");
+}
+
+async function realizarOperacionCRUD(operacion: Function, mensajeError: string, req, res){
+    const cliente = new Client();
+    await cliente.connect();
+    try{
+        await operacion(cliente, req, res);
+    }catch(err){
+        console.log(mensajeError + `${err}`);
+        res.status(500).json({ error : mensajeError});
+    }finally{
+        await cliente.end();
+    }
+}
+
+
+export async function generarCRUD(app: Express.Application, ruta: string){
+
+    app.get(`${ruta}`, async (req, res) => {
+        await realizarOperacionCRUD(obtenerAlumnos, "Error al listar los alumnos", req, res);
     });
 
-    app.post("/api/alumnos", async (req, res) => {
-        const cliente = new Client();
-        await cliente.connect();
-        let alumno = req.body;
-        console.log("Recibiendo alumno");
-
-        try{
-            await actualizarTablaAlumnosJSON(cliente, [alumno]);
-            res.json("OK");
-        }catch(err){
-            console.log(`Error al agregar alumno ${err}`);
-            res.status(500).json({ error: "Error al agregar el alumno"});
-        }finally{
-            await cliente.end();
-        }
+    app.post(`${ruta}`, async (req, res) => {
+        await realizarOperacionCRUD(agregarAlumno, "Error al agregar alumno", req, res)
     })
-    app.delete("/api/alumnos/:lu", async (req, res) => {
-        const cliente = new Client();
-        await cliente.connect();
-        console.log(`Borrando alumno con lu: ${req.params.lu}`);
-        try{
-            await borrarAlumnoDeLaTabla(cliente, req.params.lu);
-            res.json("OK");
-        }catch(err){
-            console.log(`Error al borrar alumno ${err}`);
-            res.status(500).json({ error: "Error al borrar el alumno"});
-        }finally{
-            await cliente.end();
-        }
+
+    app.delete(`${ruta}/:lu`, async (req, res) => {
+        await realizarOperacionCRUD(borrarAlumno, "Error al borrar al alumno", req, res);
     })
 }

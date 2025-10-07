@@ -1,6 +1,8 @@
 import { Client } from 'pg'; 
 import type {Alumno} from '../tipos.ts';
 
+type filtro = {lu : string} | {fecha: string} | {all: boolean}
+
 function sqlLiteral(literal:string|null): string{
     const res = (literal == null ? `null` : 
                 typeof literal == "string" ? `'${literal.replace(/'/g, `''`)}'` : undefined);
@@ -40,17 +42,24 @@ export async function borrarAlumnoDeLaTabla(cliente: Client, lu_alumno: string){
     await cliente.query(query);
 }
 
-export async function buscarAlumnosPorFecha(client:Client, fecha: string) {
+async function buscarAlumno(client: Client, filtro: filtro){
     const instruccion = `SELECT * FROM tp.alumnos
-                        WHERE titulo_en_tramite = ${sqlLiteral(fecha)}`;
-    const alumnos = await client.query(instruccion);
+                        WHERE titulo IS NOT null
+                        ${"lu" in filtro ? `AND lu = ${sqlLiteral(filtro.lu)}` : ``}
+                        ${"fecha" in filtro ? `AND titulo_en_tramite = ${sqlLiteral(filtro.fecha)}` : ``}`;
 
+    const alumnos = await client.query(instruccion);
     return alumnos.rows;
 }
 
-export async function buscarAlumnoPorLU(cliente:Client, lu:string){
-    const instruccion = `SELECT * FROM tp.alumnos
-                        WHERE lu = ${sqlLiteral(lu)}`;
-    const alumno = await cliente.query(instruccion);
-    return alumno.rows;
+export async function buscarAlumnosPorFecha(client:Client, fecha: string) {
+    return await buscarAlumno(client, {fecha: fecha});
+}
+
+export async function buscarAlumnoPorLU(client:Client, lu:string){
+    return await buscarAlumno(client, {lu: lu});
+}
+
+export async function buscarTodosLosAlumnos(client: Client){
+    return await buscarAlumno(client, {all: true});
 }

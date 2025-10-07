@@ -215,7 +215,7 @@ app.patch('/api/v0/alumnos', async (req, res) => {
     await atenderPedido(cargarAlumnosJSON, req.body, req, res);
 })
 
-await generarCRUD(app);
+await generarCRUD(app, "/api/alumnos");
 
 app.listen(port, () => {
     console.log(`Example app listening on port http://localhost:${port}/app/menu`)
