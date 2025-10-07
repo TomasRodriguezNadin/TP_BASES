@@ -176,27 +176,31 @@ async function enviarHTML(parametro: string, cliente: Client, generador: Functio
     res.send(html);
 }
 
-async function enviarHTMLLU(parametro: string, cliente: Client, res){
+async function enviarHTMLLU(cliente: Client, req, res){
+    const parametro = req.params.lu;
     await enviarHTML(parametro, cliente, generarCertificadoPorLu, res);
 }
 
-async function enviarHTMLFecha(parametro: string, cliente: Client, res){
+async function enviarHTMLFecha(cliente: Client, req, res){
+    const parametro = req.params.fecha;
     await enviarHTML(parametro, cliente, generarCertificadoPorFechaServidor, res);
 }
 
-async function cargarAlumnosJSON(parametro: Alumno[], cliente: Client, res){
+async function cargarAlumnosJSON(cliente: Client, req, res){
+    const parametro = req.body;
     await actualizarTablaAlumnosJSON(cliente, parametro);
     console.log("Alumnos cargados correctamente");
 }
 
-async function atenderPedido(respuesta: Function, parametro: string | Alumno[], req, res){
+export async function atenderPedido(respuesta: Function, mensajeError: string, req, res){
     console.log(req.params, req.query, req.body);
     const clientDB = new Client();
     await clientDB.connect();
 
     try{
-        await respuesta(parametro, clientDB, res)
+        await respuesta(clientDB, req, res);
     }catch(err){
+        console.log(mensajeError + ` ${err}`);
         res.status(404).send(ERROR.replace("error", err));
     }finally{
         await clientDB.end();
@@ -204,15 +208,15 @@ async function atenderPedido(respuesta: Function, parametro: string | Alumno[], 
 }
 
 app.get('/api/v0/lu/:lu', async (req, res) => {
-    await atenderPedido(enviarHTMLLU, req.params.lu, req, res);
+    await atenderPedido(enviarHTMLLU, "No se pudo generar el certificado para el alumno", req, res);
 })
 
 app.get('/api/v0/fecha/:fecha', async (req, res) => {
-    await atenderPedido(enviarHTMLFecha, req.params.fecha, req, res)
+    await atenderPedido(enviarHTMLFecha, "No se pudieron generar los certificados", req, res)
 })
 
 app.patch('/api/v0/alumnos', async (req, res) => {
-    await atenderPedido(cargarAlumnosJSON, req.body, req, res);
+    await atenderPedido(cargarAlumnosJSON, "No se pudieron cargar los alumnos a la tabla", req, res);
 })
 
 await generarCRUD(app, "/api/alumnos");
