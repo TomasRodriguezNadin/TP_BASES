@@ -34,6 +34,12 @@ export async function actualizarTablaAlumnosJSON(cliente: Client, listaAlumnos: 
     }
 }
 
+export async function borrarAlumnoDeLaTabla(cliente: Client, lu_alumno: string){
+    let query = `DELETE FROM TP.alumnos 
+                WHERE lu = ${sqlLiteral(lu_alumno)}`;
+    await cliente.query(query);
+}
+
 export async function buscarAlumnosPorFecha(client:Client, fecha: string) {
     const instruccion = `SELECT * FROM tp.alumnos
                         WHERE titulo_en_tramite = ${sqlLiteral(fecha)}`;

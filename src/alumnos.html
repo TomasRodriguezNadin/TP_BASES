@@ -59,7 +59,7 @@
 
     async function eliminarAlumno(lu) {
       if (!confirm('¿Seguro que deseas borrar este alumno?')) return;
-      await fetch(`${API_URL}/${lu}`, { method: 'DELETE' });
+      await fetch(`${API_URL}/${encodeURIComponent(lu)}`, { method: 'DELETE' });
       cargarAlumnos();
     }
 

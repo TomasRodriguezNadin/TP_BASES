@@ -1,6 +1,6 @@
 import * as Express from "express";
 import { Client } from 'pg';
-import { actualizarTablaAlumnosJSON } from "./acciones/accionesSQL.ts";
+import { actualizarTablaAlumnosJSON, borrarAlumnoDeLaTabla } from "./acciones/accionesSQL.ts";
 
 export async function generarCRUD(app: Express.Application){
 
@@ -32,6 +32,20 @@ export async function generarCRUD(app: Express.Application){
         }catch(err){
             console.log(`Error al agregar alumno ${err}`);
             res.status(500).json({ error: "Error al agregar el alumno"});
+        }finally{
+            await cliente.end();
+        }
+    })
+    app.delete("/api/alumnos/:lu", async (req, res) => {
+        const cliente = new Client();
+        await cliente.connect();
+        console.log(`Borrando alumno con lu: ${req.params.lu}`);
+        try{
+            await borrarAlumnoDeLaTabla(cliente, req.params.lu);
+            res.json("OK");
+        }catch(err){
+            console.log(`Error al borrar alumno ${err}`);
+            res.status(500).json({ error: "Error al borrar el alumno"});
         }finally{
             await cliente.end();
         }
