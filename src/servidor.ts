@@ -7,8 +7,18 @@ import { generarCertificadoPorFechaServidor, generarCertificadoPorLu} from './ac
 import {actualizarTablaAlumnosJSON, buscarAlumnoPorLU} from "./acciones/accionesSQL.ts";
 import { warn } from "node:console";
 import { generarCRUD } from "./crud.ts";
-import type { Alumno } from "./tipos.ts";
-dotenv.config({ debug: true }); // así activás el logeo
+import session, { SessionData } from 'express-session';
+import { autenticarUsuario, crearUsuario, Usuario } from './auth.js';
+import { Request, Response, NextFunction } from "express"; 
+import * as fs from 'fs';
+
+dotenv.config({ debug: true, path: "./.env" }); // así activás el logeo
+
+declare module 'express-session' {
+    interface SessionData {
+        usuario?: Usuario;
+    }
+}
 
 
 const app = express()
@@ -17,6 +27,59 @@ const port = 3000
 app.use(express.json({ limit: '10mb' })); // para poder leer el body
 app.use(express.urlencoded({ extended: true, limit: '10mb'  })); // para poder leer el body
 app.use(express.text({ type: 'text/csv', limit: '10mb' })); // para poder leer el body como texto plano
+
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'cambiar_este_secreto_en_produccion',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: false,
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24 // 1 día
+    }
+}));
+
+function requireAuth(req: Request, res: Response, next: NextFunction) {
+    if (req.session.usuario) {
+        next();
+    } else {
+        res.redirect('/app/login');
+    }
+}
+
+// Middleware de autenticación para el backend
+function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
+    if (req.session.usuario) {
+        next();
+    } else {
+        res.status(401).json({ error: 'No autenticado' });
+    }
+}
+
+// Página de login
+app.get('/app/login', (req, res) => {
+    if (req.session.usuario) {
+        return res.redirect('/app/menu');
+    }
+    const loginHtml = fs.readFileSync('./src/views/login.html', 'utf8');
+    res.send(loginHtml);
+});
+
+// API de login
+app.post('/api/v0/auth/login', express.json(), async (req, res) => {
+     ....
+});
+
+// API de logout
+app.post('/api/v0/auth/logout', (req, res) => {
+     ... 
+});
+
+
+// API de registro
+app.post('/api/v0/auth/register', express.json(), async (req, res) => {
+    ...
+});
 
 
 // Servidor del frontend:
