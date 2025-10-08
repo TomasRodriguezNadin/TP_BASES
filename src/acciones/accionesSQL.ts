@@ -1,7 +1,7 @@
 import { Client } from 'pg'; 
 import type {Alumno} from '../tipos.ts';
 
-type filtro = {lu : string} | {fecha: string} | {all: boolean}
+type filtro = {lu : string} | {fecha: string} | {orden: string} | {all: boolean}
 
 function sqlLiteral(literal:string|null): string{
     const res = (literal == null ? `null` : 
@@ -59,7 +59,8 @@ async function buscarAlumno(client: Client, filtro: filtro){
     const instruccion = `SELECT * FROM tp.alumnos
                         WHERE titulo IS NOT null
                         ${"lu" in filtro ? `AND lu = ${sqlLiteral(filtro.lu)}` : ``}
-                        ${"fecha" in filtro ? `AND titulo_en_tramite = ${sqlLiteral(filtro.fecha)}` : ``}`;
+                        ${"fecha" in filtro ? `AND titulo_en_tramite = ${sqlLiteral(filtro.fecha)}` : ``}
+                        ${"orden" in filtro ? `ORDER BY ${filtro.orden}` : ""}`;
 
     const alumnos = await client.query(instruccion);
     return alumnos.rows;
@@ -78,10 +79,5 @@ export async function buscarTodosLosAlumnos(client: Client){
 }
 
 export async function ordenarTodosLosAlumnos(client: Client, atributo: string) {
-    const instruccion = `SELECT * FROM tp.alumnos
-                        WHERE titulo IS NOT null
-                        ORDER BY ${atributo}`;
-
-    const alumnos = await client.query(instruccion);
-    return alumnos.rows;
+    return await buscarAlumno(client, {orden: atributo});
 }
