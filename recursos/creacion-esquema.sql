@@ -12,3 +12,6 @@ CREATE TABLE TP.alumnos (
 );
 
 grant SELECT, INSERT, UPDATE, DELETE on TP.alumnos to administrador;
+grant SELECT, INSERT, UPDATE, DELETE on TP.usuarios to administrador;
+GRANT USAGE, SELECT ON SEQUENCE tp.usuarios_id_seq TO administrador;
+GRANT UPDATE ON SEQUENCE tp.usuarios_id_seq TO administrador;
