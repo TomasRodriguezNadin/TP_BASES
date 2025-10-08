@@ -25,8 +25,13 @@
   <table id="alumnosTable">
     <thead>
       <tr>
-        <th>LU</th><th>Nombre</th><th>Apellido</th>
-        <th>Título</th><th>Título en trámite</th><th>Egreso</th><th>Acciones</th>
+      <th>LU <button onclick="ordenarPor('lu')">↓</button></th>
+      <th>Nombre <button onclick="ordenarPor('nombre')">↓</button></th>
+      <th>Apellido <button onclick="ordenarPor('apellido')">↓</button></th>
+      <th>Título <button onclick="ordenarPor('titulo')">↓</button></th>
+      <th>Título en trámite <button onclick="ordenarPor('titulo_en_tramite')">↓</button></th>
+      <th>Egreso <button onclick="ordenarPor('egreso')">↓</button></th>
+      <th>Acciones</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -34,9 +39,15 @@
 
   <script>
     const API_URL = '/api/alumnos';
+    let ordenarPorAtributo = null;
 
+    async function ordenarPor(atributo) {
+      ordenarPorAtributo = atributo;
+      cargarAlumnos();
+    }
     async function cargarAlumnos() {
-      const res = await fetch(API_URL);
+      const url = ordenarPorAtributo ? `${API_URL}/${ordenarPorAtributo}` : API_URL;
+      const res = await fetch(url);
       const alumnos = await res.json();
       const tbody = document.querySelector('#alumnosTable tbody');
       tbody.innerHTML = '';

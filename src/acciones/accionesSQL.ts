@@ -76,3 +76,12 @@ export async function buscarAlumnoPorLU(client:Client, lu:string){
 export async function buscarTodosLosAlumnos(client: Client){
     return await buscarAlumno(client, {all: true});
 }
+
+export async function ordenarTodosLosAlumnos(client: Client, atributo: string) {
+    const instruccion = `SELECT * FROM tp.alumnos
+                        WHERE titulo IS NOT null
+                        ORDER BY ${atributo}`;
+
+    const alumnos = await client.query(instruccion);
+    return alumnos.rows;
+}
