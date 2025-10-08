@@ -7,9 +7,11 @@ import { generarCertificadoPorFechaServidor, generarCertificadoPorLu} from './ac
 import {actualizarTablaAlumnosJSON, buscarAlumnoPorLU} from "./acciones/accionesSQL.ts";
 import { warn } from "node:console";
 import { generarCRUD } from "./crud.ts";
-import session, { SessionData } from 'express-session';
-import { autenticarUsuario, crearUsuario, Usuario } from './auth.js';
-import { Request, Response, NextFunction } from "express"; 
+import session from 'express-session';
+import type { SessionData } from "express-session";
+import { autenticarUsuario, crearUsuario } from './auth.ts';
+import type { Usuario } from "./auth.ts";
+import type { Request, Response, NextFunction } from "express"; 
 import * as fs from 'fs';
 
 dotenv.config({ debug: true, path: "./.env" }); // así activás el logeo
@@ -48,7 +50,7 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
 }
 
 // Middleware de autenticación para el backend
-function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
+export function requireAuthAPI(req: Request, res: Response, next: NextFunction) {
     if (req.session.usuario) {
         next();
     } else {
@@ -61,25 +63,69 @@ app.get('/app/login', (req, res) => {
     if (req.session.usuario) {
         return res.redirect('/app/menu');
     }
-    const loginHtml = fs.readFileSync('./src/views/login.html', 'utf8');
+    const loginHtml = fs.readFileSync('./login.html', 'utf8');
     res.send(loginHtml);
 });
 
 // API de login
 app.post('/api/v0/auth/login', express.json(), async (req, res) => {
-     ....
+    const cliente = new Client();
+    await cliente.connect();
+
+    const username = req.body.username;
+    const password = req.body.password;
+    const usuario = await autenticarUsuario(cliente, username, password);
+
+    if(usuario){
+        req.session.usuario = usuario;
+        res.json({
+            success: true,
+            usuario: {
+                username: usuario.username,
+                name: usuario.nombre
+            }
+        });
+    }else{
+        res.status(401).json({ error: 'Credenciales inválidas' });
+    }
+
+    await cliente.end();
 });
 
 // API de logout
+/*
 app.post('/api/v0/auth/logout', (req, res) => {
      ... 
 });
+*/
 
 
 // API de registro
 app.post('/api/v0/auth/register', express.json(), async (req, res) => {
-    ...
+    const cliente = new Client();
+    await cliente.connect();
+
+    const parametros = req.body;
+    console.log(parametros);
+    const nuevoUsuario = await crearUsuario(cliente, parametros.username, parametros.password, parametros.nombre, parametros.email);
+    console.log(nuevoUsuario);
+
+    if(nuevoUsuario){
+        req.session.usuario = nuevoUsuario;
+        res.status(201).json({
+            success: true,
+            usuario: {
+                username: nuevoUsuario.username,
+                name: nuevoUsuario.nombre
+            }
+        });
+    }else{
+        res.status(401).json({ error: 'Datos invalidos' });
+    }
+
+    await cliente.end();
 });
+
 
 
 // Servidor del frontend:
@@ -100,7 +146,7 @@ const HTML_MENU=
 </html>
 `;
 
-app.get('/app/menu', (_, res) => {
+app.get('/app/menu', requireAuth, (_, res) => {
     res.send(HTML_MENU)
 })
 
@@ -126,7 +172,7 @@ const HTML_LU=
 </html>
 `;
 
-app.get('/app/lu', (_, res) => {
+app.get('/app/lu', requireAuth, (_, res) => {
     res.send(HTML_LU)
 })
 
@@ -152,7 +198,7 @@ const HTML_FECHA=
 </html>
 `;
 
-app.get('/app/fecha', (_, res) => {
+app.get('/app/fecha',requireAuth, (_, res) => {
     res.send(HTML_FECHA)
 })
 
@@ -218,12 +264,12 @@ const HTML_ARCHIVO_JSON=
 </html>
 `;
 
-app.get('/app/archivo-json', (_, res) => {
+app.get('/app/archivo-json', requireAuth, (_, res) => {
     res.send(HTML_ARCHIVO_JSON)
 })
 
 
-app.get('/app/alumnos', (_, res) => {
+app.get('/app/alumnos', requireAuth, (_, res) => {
     const fileName = fileURLToPath(import.meta.url);
     const dirName = path.dirname(fileName);
     res.sendFile(path.join(dirName, "alumnos.html"));
@@ -270,20 +316,20 @@ export async function atenderPedido(respuesta: Function, mensajeError: string, r
     }
 }
 
-app.get('/api/v0/lu/:lu', async (req, res) => {
+app.get('/api/v0/lu/:lu', requireAuthAPI, async (req, res) => {
     await atenderPedido(enviarHTMLLU, "No se pudo generar el certificado para el alumno", req, res);
 })
 
-app.get('/api/v0/fecha/:fecha', async (req, res) => {
+app.get('/api/v0/fecha/:fecha', requireAuthAPI, async (req, res) => {
     await atenderPedido(enviarHTMLFecha, "No se pudieron generar los certificados", req, res)
 })
 
-app.patch('/api/v0/alumnos', async (req, res) => {
+app.patch('/api/v0/alumnos', requireAuthAPI, async (req, res) => {
     await atenderPedido(cargarAlumnosJSON, "No se pudieron cargar los alumnos a la tabla", req, res);
 })
 
 await generarCRUD(app, "/api/alumnos");
 
 app.listen(port, () => {
-    console.log(`Example app listening on port http://localhost:${port}/app/menu`)
+    console.log(`Example app listening on port http://localhost:${port}/app/login`)
 })

@@ -2,6 +2,7 @@ import * as Express from "express";
 import { Client } from 'pg';
 import { actualizarTablaAlumnosJSON, borrarAlumnoDeLaTabla, buscarTodosLosAlumnos, editarAlumnoDeTabla, ordenarTodosLosAlumnos } from "./acciones/accionesSQL.ts";
 import { atenderPedido } from "./servidor.ts";
+import { requireAuthAPI } from "./servidor.ts";
 
 async function obtenerAlumnos(cliente: Client, req, res){
     console.log("Obteniendo los alumnos");
@@ -40,23 +41,23 @@ async function ordenarAlumnos(cliente: Client, req, res) {
 
 export async function generarCRUD(app: Express.Application, ruta: string){
 
-    app.get(`${ruta}`, async (req, res) => {
+    app.get(`${ruta}`, requireAuthAPI, async (req, res) => {
         await atenderPedido(obtenerAlumnos, "Error al listar los alumnos", req, res);
     });
 
-    app.post(`${ruta}`, async (req, res) => {
+    app.post(`${ruta}`, requireAuthAPI, async (req, res) => {
         await atenderPedido(agregarAlumno, "Error al agregar alumno", req, res)
     })
 
-    app.delete(`${ruta}/:lu`, async (req, res) => {
+    app.delete(`${ruta}/:lu`, requireAuthAPI, async (req, res) => {
         await atenderPedido(borrarAlumno, "Error al borrar al alumno", req, res);
     })
 
-    app.put(`${ruta}/:lu`, async (req, res) => {
+    app.put(`${ruta}/:lu`, requireAuthAPI, async (req, res) => {
         await atenderPedido(editarAlumno, "Error al editar el alumno", req, res);
     })
 
-    app.get(`${ruta}/:atributo`, async (req, res) => {
+    app.get(`${ruta}/:atributo`, requireAuthAPI, async (req, res) => {
         await atenderPedido(ordenarAlumnos, "Error al ordenar los alumnos", req, res);
     });
 }
