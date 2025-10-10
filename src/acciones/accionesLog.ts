@@ -3,11 +3,11 @@ import {writeFile, appendFile} from 'node:fs/promises';
 import { buscarAlumnosPorFecha} from './accionesSQL.ts';
 import { esFechaValida } from './validaciones.ts';
 import { path_salida, archivo_log} from '../constantes.ts'
-import {generarCertificadoAlumno, generarCertificadoPorLu, cargarAlumnosDesdeCsv} from './generacionCertificados.ts';
+import {generarCertificadoAlumno, generarCertificadoPorLu, cargarEscribanosDesdeCsv} from './generacionCertificados.ts';
 
 
 export const instrucciones = [
-    {comando: 'archivo', funcion: cargarAlumnosDesdeCsvLog},
+    {comando: 'archivo', funcion: cargarEscribanosDesdeCsvLog},
     {comando: 'fecha', funcion: pedirCertificadoPorFecha},
     {comando: 'lu', funcion: pedirCertificadoLU},
 ];
@@ -30,8 +30,8 @@ async function accionRegistrandoErroresEnLog(accion: Function, parametro: string
     }
 }
 
-async function cargarAlumnosDesdeCsvLog(path: string){
-    await accionRegistrandoErroresEnLog(cargarAlumnosDesdeCsv, path);
+async function cargarEscribanosDesdeCsvLog(path: string){
+    await accionRegistrandoErroresEnLog(cargarEscribanosDesdeCsv, path);
 }
 
 async function pedirCertificadoPorFecha(fecha: string){

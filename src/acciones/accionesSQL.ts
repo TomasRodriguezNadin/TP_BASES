@@ -27,10 +27,10 @@ export async function editarAlumnoDeTabla(client: Client, alumno: Alumno){
     await client.query(consulta);
 }
 
-export async function actualizarTablaAlumnos(client:Client, listaAlumnos:string[], columnas:string[]){
+export async function actualizarTablaEscribanos(client:Client, listaAlumnos:string[], columnas:string[]){
     for(const linea of listaAlumnos){
         const datos = linea.split(',').map(value => value.trim());
-        const instruccion = `INSERT INTO TP.alumnos (${columnas.join(', ')}) VALUES
+        const instruccion = `INSERT INTO TP.escribanos (${columnas.join(', ')}) VALUES
                             (${datos.map((dato) => dato === '' ? 'null' : sqlLiteral(dato) ).join(',')})`;
         await client.query(instruccion);
     }
