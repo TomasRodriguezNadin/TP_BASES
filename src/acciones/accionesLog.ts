@@ -3,11 +3,11 @@ import {writeFile, appendFile} from 'node:fs/promises';
 import { buscarAlumnosPorFecha} from './accionesSQL.ts';
 import { esFechaValida } from './validaciones.ts';
 import { path_salida, archivo_log} from '../constantes.ts'
-import {generarCertificadoAlumno, generarCertificadoPorLu, cargarEscribanosDesdeCsv} from './generacionCertificados.ts';
+import {generarCertificadoAlumno, generarCertificadoPorLu, cargarATablaDesdeCsv} from './generacionCertificados.ts';
 
 
 export const instrucciones = [
-    {comando: 'archivo', funcion: cargarEscribanosDesdeCsvLog},
+    {comando: 'archivo', funcion: cargarATablaDesdeCsvLog},
     {comando: 'fecha', funcion: pedirCertificadoPorFecha},
     {comando: 'lu', funcion: pedirCertificadoLU},
 ];
@@ -18,11 +18,12 @@ export async function escribirEnLog(informacion: string){
     appendFile(archivo_log, tiempo + "-- " + informacion + "\n");
 }
 
-async function accionRegistrandoErroresEnLog(accion: Function, parametro: string){
+async function accionRegistrandoErroresEnLog(accion: Function, parametro: string | string[]){
+    const param = typeof parametro == 'string' ? [parametro] : parametro;
     const clientDB = new Client();
     await clientDB.connect();
     try{
-        await accion(clientDB, parametro);
+        await accion(clientDB, ...param);
     }catch(err){
         escribirEnLog(err);
     }finally{
@@ -30,8 +31,8 @@ async function accionRegistrandoErroresEnLog(accion: Function, parametro: string
     }
 }
 
-async function cargarEscribanosDesdeCsvLog(path: string){
-    await accionRegistrandoErroresEnLog(cargarEscribanosDesdeCsv, path);
+async function cargarATablaDesdeCsvLog(tabla: string, path: string){
+    await accionRegistrandoErroresEnLog(cargarATablaDesdeCsv, [tabla, path]);
 }
 
 async function pedirCertificadoPorFecha(fecha: string){

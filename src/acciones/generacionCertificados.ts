@@ -2,8 +2,9 @@ import { Client } from 'pg';
 import {readFile, unlink} from 'node:fs/promises';
 import { path_plantilla } from '../constantes.ts';
 import { esLUValida, esFechaValida } from './validaciones.ts';
-import { buscarAlumnoPorLU, buscarAlumnosPorFecha, actualizarTablaEscribanos, actualizarTablaAlumnosJSON } from './accionesSQL.ts';
+import { buscarAlumnoPorLU, buscarAlumnosPorFecha, actualizarTabla, buscarEscribanoPorMatricula, buscarTipoPorID } from './accionesSQL.ts';
 import { parsearCsv } from './accionesCSV.ts';
+import { Experiencia } from '../tipos.ts';
 import type {Alumno} from '../tipos.ts';
 
 function comoString(cadena: string|null): string{
@@ -12,9 +13,35 @@ function comoString(cadena: string|null): string{
     return res;
 }
 
-export async function cargarEscribanosDesdeCsv(cliente:Client, path:string){
-    const {data: listaAlumnos, titles: categories} = await parsearCsv(path);
-    await actualizarTablaEscribanos(cliente, listaAlumnos, categories);
+async function filtrarEscrituras(cliente: Client, escrituras: string[], categorias: string[]): Promise<string[]>{
+    const indiceMatricula = categorias.indexOf("matricula");
+    const indiceTipo = categorias.indexOf("idTipo");
+    let listaFiltrada: string[] = [];
+    for (const linea of escrituras){
+        const elementos = linea.split(",");
+        const matricula = elementos[indiceMatricula];
+        const idTipo = elementos[indiceTipo];
+        const resEscribano = await buscarEscribanoPorMatricula(cliente, matricula);
+        const resRequerida = await buscarTipoPorID(cliente, idTipo);
+        console.log(resEscribano);
+        console.log(resRequerida);
+        const experienciaEscribano = resEscribano[0].capacidad;
+        const experienciaRequerida = resRequerida[0].experienciarequerida;
+        console.log(experienciaRequerida);
+        console.log(experienciaEscribano);
+        if(Experiencia[experienciaRequerida] <= Experiencia[experienciaEscribano]){
+            listaFiltrada.push(linea);
+        }
+    }
+    return listaFiltrada;
+}
+
+export async function cargarATablaDesdeCsv(cliente:Client, tabla: string, path:string){
+    let {data: lista, titles: categorias} = await parsearCsv(path);
+    if(tabla == "escrituras"){
+        lista = await filtrarEscrituras(cliente, lista, categorias);
+    }
+    await actualizarTabla(cliente, tabla, lista, categorias);
 }
 
 export async function generarCertificadoAlumno(alumno: Record<string, string>): Promise<String> {

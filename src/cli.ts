@@ -48,8 +48,7 @@ async function procesarCarpeta(parametros: operacion[]){
 }
 
 async function main(){
-    dotenv.config({ path: "./.env" });
-    dotenv.config({ path: "./.env.cli" });
+    dotenv.config({ path: ["./.env", "./.env.cli"] });
 
     //ejecutar cada 2 segundos
     setInterval(async () => {

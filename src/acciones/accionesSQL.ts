@@ -1,7 +1,7 @@
 import { Client } from 'pg'; 
 import type {Alumno} from '../tipos.ts';
 
-type filtro = {lu : string} | {fecha: string} | {orden: string} | {all: boolean}
+type filtro = {lu : string} | {fecha: string} | {orden: string} | {all: boolean} | {matricula: string} | {idTipo: string}
 
 function sqlLiteral(literal:string|null): string{
     const res = (literal == null ? `null` : 
@@ -27,10 +27,10 @@ export async function editarAlumnoDeTabla(client: Client, alumno: Alumno){
     await client.query(consulta);
 }
 
-export async function actualizarTablaEscribanos(client:Client, listaAlumnos:string[], columnas:string[]){
-    for(const linea of listaAlumnos){
+export async function actualizarTabla(client:Client, tabla: string, lista:string[], columnas:string[]){
+    for(const linea of lista){
         const datos = linea.split(',').map(value => value.trim());
-        const instruccion = `INSERT INTO TP.escribanos (${columnas.join(', ')}) VALUES
+        const instruccion = `INSERT INTO TP.${tabla} (${columnas.join(', ')}) VALUES
                             (${datos.map((dato) => dato === '' ? 'null' : sqlLiteral(dato) ).join(',')})`;
         await client.query(instruccion);
     }
@@ -55,29 +55,41 @@ export async function borrarAlumnoDeLaTabla(cliente: Client, lu_alumno: string){
     await cliente.query(query);
 }
 
-async function buscarAlumno(client: Client, filtro: filtro){
-    const instruccion = `SELECT * FROM tp.alumnos
-                        WHERE titulo IS NOT null
-                        ${"lu" in filtro ? `AND lu = ${sqlLiteral(filtro.lu)}` : ``}
-                        ${"fecha" in filtro ? `AND titulo_en_tramite = ${sqlLiteral(filtro.fecha)}` : ``}
-                        ${"orden" in filtro ? `ORDER BY ${filtro.orden}` : ""}`;
+async function buscarTabla(client: Client, tabla: string, filtro: filtro){
+    let instruccion = `SELECT * FROM tp.${tabla}
+                        WHERE `;
+    let condiciones: string[] = [];
+    for (const [key, value] of Object.entries(filtro)){
+        condiciones.push(`${key} = ${sqlLiteral(value)}`);
+    }
+    const condicion = condiciones.join("\n AND");
+    instruccion += condicion;
+    console.log(instruccion);
 
     const alumnos = await client.query(instruccion);
     return alumnos.rows;
 }
 
 export async function buscarAlumnosPorFecha(client:Client, fecha: string) {
-    return await buscarAlumno(client, {fecha: fecha});
+    return await buscarTabla(client, "alumnos", {fecha: fecha});
 }
 
 export async function buscarAlumnoPorLU(client:Client, lu:string){
-    return await buscarAlumno(client, {lu: lu});
+    return await buscarTabla(client,"alumnos", {lu: lu});
 }
 
 export async function buscarTodosLosAlumnos(client: Client){
-    return await buscarAlumno(client, {all: true});
+    return await buscarTabla(client,"alumnos", {all: true});
 }
 
 export async function ordenarTodosLosAlumnos(client: Client, atributo: string) {
-    return await buscarAlumno(client, {orden: atributo});
+    return await buscarTabla(client,"alumnos", {orden: atributo});
+}
+
+export async function buscarEscribanoPorMatricula(client: Client, matricula: string){
+    return await buscarTabla(client, "escribanos", {matricula: matricula})
+}
+
+export async function buscarTipoPorID(client: Client, idTipo: string){
+    return await buscarTabla(client, "tipoescrituras", {idTipo: idTipo});
 }
