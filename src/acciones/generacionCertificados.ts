@@ -2,7 +2,7 @@ import { Client } from 'pg';
 import {readFile, unlink} from 'node:fs/promises';
 import { path_plantilla } from '../constantes.ts';
 import { esLUValida, esFechaValida } from './validaciones.ts';
-import { buscarAlumnoPorLU, buscarAlumnosPorFecha, actualizarTablaAlumnos, actualizarTablaAlumnosJSON } from './accionesSQL.ts';
+import { buscarAlumnoPorLU, buscarAlumnosPorFecha, actualizarTablaEscribanos, actualizarTablaAlumnosJSON } from './accionesSQL.ts';
 import { parsearCsv } from './accionesCSV.ts';
 import type {Alumno} from '../tipos.ts';
 
@@ -12,9 +12,9 @@ function comoString(cadena: string|null): string{
     return res;
 }
 
-export async function cargarAlumnosDesdeCsv(cliente:Client, path:string){
+export async function cargarEscribanosDesdeCsv(cliente:Client, path:string){
     const {data: listaAlumnos, titles: categories} = await parsearCsv(path);
-    await actualizarTablaAlumnos(cliente, listaAlumnos, categories);
+    await actualizarTablaEscribanos(cliente, listaAlumnos, categories);
 }
 
 export async function generarCertificadoAlumno(alumno: Record<string, string>): Promise<String> {
