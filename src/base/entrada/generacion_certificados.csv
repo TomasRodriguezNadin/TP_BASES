@@ -1,2 +1,3 @@
 tipo,parametro
-archivo,./base/entrada/ejemplo.csv
+archivo,escribanos,./base/entrada/ejemplo.csv
+archivo,clientes,./base/entrada/clientes.csv
