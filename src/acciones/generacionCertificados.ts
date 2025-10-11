@@ -23,12 +23,8 @@ async function filtrarEscrituras(cliente: Client, escrituras: string[], categori
         const idTipo = elementos[indiceTipo];
         const resEscribano = await buscarEscribanoPorMatricula(cliente, matricula);
         const resRequerida = await buscarTipoPorID(cliente, idTipo);
-        console.log(resEscribano);
-        console.log(resRequerida);
         const experienciaEscribano = resEscribano[0].capacidad;
         const experienciaRequerida = resRequerida[0].experienciarequerida;
-        console.log(experienciaRequerida);
-        console.log(experienciaEscribano);
         if(Experiencia[experienciaRequerida] <= Experiencia[experienciaEscribano]){
             listaFiltrada.push(linea);
         }
