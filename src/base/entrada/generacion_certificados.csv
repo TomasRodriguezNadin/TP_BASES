@@ -1,3 +1,5 @@
 tipo,parametro
 archivo,escribanos,./base/entrada/ejemplo.csv
 archivo,clientes,./base/entrada/clientes.csv
+archivo,tipoEscrituras,./base/entrada/tipoEscritura.csv
+

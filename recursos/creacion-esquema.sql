@@ -14,7 +14,7 @@ CREATE TABLE TP.escribanos (
 grant SELECT, INSERT, UPDATE, DELETE on TP.escribanos to administrador;
 
 CREATE TABLE TP.clientes (
-    cuit INT PRIMARY KEY,
+    cuit BIGINT PRIMARY KEY,
     nombre TEXT NOT NULL,
     apellido TEXT NOT NULL
 );
@@ -30,11 +30,11 @@ CREATE TABLE TP.tipoEscrituras (
 grant SELECT, INSERT, UPDATE, DELETE on TP.tipoEscrituras to administrador;
 
 CREATE TABLE TP.escrituras (
-    matricula INT PRIMARY KEY
+    matricula INT,
     nroProtocolo INT,
     anio INT,
     idTipo INT,
-    cuit INT,
+    cuit BIGINT,
     PRIMARY KEY (matricula, nroProtocolo, anio),
     FOREIGN KEY (matricula) REFERENCES TP.escribanos(matricula),
     FOREIGN KEY (idTipo) REFERENCES TP.tipoEscrituras(idTipo),
