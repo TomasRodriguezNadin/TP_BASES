@@ -1,13 +1,13 @@
 import { Client } from 'pg';
 import {writeFile, appendFile} from 'node:fs/promises';
-import { buscarAlumnosPorFecha} from './accionesSQL.ts';
+import { buscarAlumnosPorFecha, buscarDatosDeEscritura} from './accionesSQL.ts';
 import { esFechaValida } from './validaciones.ts';
 import { path_salida, archivo_log} from '../constantes.ts'
-import {generarCertificadoAlumno, generarCertificadoPorLu, cargarATablaDesdeCsv} from './generacionCertificados.ts';
-
+import {generarCertificadoAlumno, generarCertificadoPorLu, cargarATablaDesdeCsv, generarEscritura} from './generacionCertificados.ts';
 
 export const instrucciones = [
     {comando: 'archivo', funcion: cargarATablaDesdeCsvLog},
+    {comando: 'escritura', funcion: pedirCertificadoEscritura},    
     {comando: 'fecha', funcion: pedirCertificadoPorFecha},
     {comando: 'lu', funcion: pedirCertificadoLU},
 ];
@@ -39,6 +39,10 @@ async function pedirCertificadoPorFecha(fecha: string){
     await accionRegistrandoErroresEnLog(generarCertificadoPorFecha, fecha);
 }
 
+async function pedirCertificadoEscritura(matricula: string, numeroProtocolo: string, anio: string){
+    await accionRegistrandoErroresEnLog(generarEscrituraRegistrandoEnLog, [matricula, numeroProtocolo, anio]);
+}
+
 async function generarCertificadoPorFecha(cliente:Client, fecha:string){
     if (!esFechaValida(fecha)) {
         throw new Error("La fecha debe estar en formato YYYY-MM-DD");
@@ -60,6 +64,16 @@ async function generarCertificadoPorFecha(cliente:Client, fecha:string){
 
 async function pedirCertificadoLU(lu: string){
     await accionRegistrandoErroresEnLog(generarCertificadoLuRegistrandoEnLog, lu);
+}
+
+async function generarEscrituraRegistrandoEnLog(cliente: Client, matricula: string, numeroProtocolo: string, anio: string){
+    
+    const DatosEscritura = await buscarDatosDeEscritura(cliente, matricula, numeroProtocolo, anio) ;
+
+    const escritura = await generarEscritura(DatosEscritura[0]);
+    escribirEnLog(`Certificado nro ${numeroProtocolo}`);
+    const outputFile = path_salida + `certificado${numeroProtocolo.replace("/", "-")}.html`;
+    await writeFile(outputFile, escritura, 'utf8');
 }
 
 async function generarCertificadoLuRegistrandoEnLog(cliente: Client, lu: string){

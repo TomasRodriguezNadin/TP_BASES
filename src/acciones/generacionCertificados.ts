@@ -1,6 +1,6 @@
 import { Client } from 'pg';
 import {readFile, unlink} from 'node:fs/promises';
-import { path_plantilla } from '../constantes.ts';
+import { path_plantilla, path_plantilla_escritura } from '../constantes.ts';
 import { esLUValida, esFechaValida } from './validaciones.ts';
 import { buscarAlumnoPorLU, buscarAlumnosPorFecha, actualizarTabla, buscarEscribanoPorMatricula, buscarTipoPorID } from './accionesSQL.ts';
 import { parsearCsv } from './accionesCSV.ts';
@@ -43,6 +43,17 @@ export async function cargarATablaDesdeCsv(cliente:Client, tabla: string, path:s
 export async function generarCertificadoAlumno(alumno: Record<string, string>): Promise<String> {
     let certificado = await readFile(path_plantilla, {encoding: 'utf8'});
     for(const [key, value] of Object.entries(alumno)){
+        certificado = certificado.replace(
+            `[#${key}]`,
+            comoString(value)
+        );
+    }
+    return certificado;
+}
+
+export async function generarEscritura(datosTramite: Record<string, string>): Promise<String> {
+    let certificado = await readFile(path_plantilla_escritura, {encoding: 'utf8'});
+    for(const [key, value] of Object.entries(datosTramite)){
         certificado = certificado.replace(
             `[#${key}]`,
             comoString(value)

@@ -1,7 +1,7 @@
 import { Client } from 'pg'; 
 import type {Alumno} from '../tipos.ts';
 
-type filtro = {lu : string} | {fecha: string} | {orden: string} | {all: boolean} | {matricula: string} | {idTipo: string}
+type filtro = {lu : string} | {fecha: string} | {orden: string} | {all: boolean} | {matricula: string} | {idTipo: string} | {nroprotocolo:string} | {anio:string}
 
 function sqlLiteral(literal:string|null): string{
     const res = (literal == null ? `null` : 
@@ -62,7 +62,7 @@ async function buscarTabla(client: Client, tabla: string, filtro: filtro){
     for (const [key, value] of Object.entries(filtro)){
         condiciones.push(`${key} = ${sqlLiteral(value)}`);
     }
-    const condicion = condiciones.join("\n AND");
+    const condicion = condiciones.join("\n AND ");
     instruccion += condicion;
     console.log(instruccion);
 
@@ -84,6 +84,10 @@ export async function buscarTodosLosAlumnos(client: Client){
 
 export async function ordenarTodosLosAlumnos(client: Client, atributo: string) {
     return await buscarTabla(client,"alumnos", {orden: atributo});
+}
+
+export async function buscarDatosDeEscritura(client: Client, matricula: string, nroProtocolo: string, anio: string){
+    return await buscarTabla(client, "escrituras", {matricula:matricula, nroprotocolo:nroProtocolo, anio:anio});
 }
 
 export async function buscarEscribanoPorMatricula(client: Client, matricula: string){
