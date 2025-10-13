@@ -43,6 +43,8 @@ export async function actualizarTablasJSON(cliente: Client, tabla: string, conte
     for(const ob of contenidos){
         const columnas = Object.keys(ob).join(', ');
         const valores = Object.values(ob);
+        console.log(columnas);
+        console.log(valores);
 
         const aInsertar = valores.map((_, i) => `$${i+1}`).join(', ');
 
@@ -52,7 +54,6 @@ export async function actualizarTablasJSON(cliente: Client, tabla: string, conte
         console.log(instruccion);
 
         await cliente.query(instruccion, valores);
-
     }
 }
 

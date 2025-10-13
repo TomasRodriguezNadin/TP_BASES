@@ -241,6 +241,7 @@ const HTML_ARCHIVO_JSON=
     }
 
     async function handleUpload() {
+      console.log('Llamando handleUpload');
       const fileInput = document.getElementById('csvFile');
       const file = fileInput.files[0];
       if (!file) {
@@ -248,8 +249,8 @@ const HTML_ARCHIVO_JSON=
         return;
       }
         
-      const seleccionar = document.getElementById('opcion') as HTMLSelectElement;
-      const optionSeleccionada = seleccionar.options[seleccionar.selectedIndex];
+      const seleccionar = document.getElementById('opcion');
+      const opcionSeleccionada = seleccionar.options[seleccionar.selectedIndex];
 
       const opcion = opcionSeleccionada.label;
       if (opcion == 0) {
@@ -266,6 +267,7 @@ const HTML_ARCHIVO_JSON=
       };
 
       try {
+        console.log('Llamando al fetch');
         const response = await fetch('../api/v0/alumnos', {
           method: 'PATCH',
           headers: {
@@ -322,8 +324,9 @@ async function enviarHTMLFecha(cliente: Client, req, res){
 
 async function cargarJSON(cliente: Client, req, res){
     const {tabla, data} = req.body;
+    console.log(tabla, data);
 
-    await actualizarTablasJSON(cliente, tabla, [data]);
+    await actualizarTablasJSON(cliente, tabla, data);
     console.log(tabla + " cargados correctamente");
 }
 
