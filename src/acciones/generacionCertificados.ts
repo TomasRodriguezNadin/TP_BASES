@@ -13,22 +13,33 @@ function comoString(cadena: string|null): string{
     return res;
 }
 
+async function tieneExperienciaRequerida(cliente: Client, matricula: string, idTipo: string): Promise<boolean>{
+    const resEscribano = await buscarEscribanoPorMatricula(cliente, matricula);
+    if(resEscribano.length == 0) throw new Error(`No hay ningun escribano de matricula ${matricula}`);
+
+    const resRequerida = await buscarTipoPorID(cliente, idTipo);
+    if(resRequerida.length == 0) throw new Error(`No hay nigun tipo de escritura de id ${idTipo}`);
+
+    const experienciaEscribano = resEscribano[0].capacidad;
+    const experienciaRequerida = resRequerida[0].experienciarequerida;
+    return Experiencia[experienciaRequerida] <= Experiencia[experienciaEscribano];
+}
+
 async function filtrarEscrituras(cliente: Client, escrituras: string[], categorias: string[]): Promise<string[]>{
     const indiceMatricula = categorias.indexOf("matricula");
     const indiceTipo = categorias.indexOf("idTipo");
+
     let listaFiltrada: string[] = [];
+
     for (const linea of escrituras){
         const elementos = linea.split(",");
         const matricula = elementos[indiceMatricula];
         const idTipo = elementos[indiceTipo];
-        const resEscribano = await buscarEscribanoPorMatricula(cliente, matricula);
-        const resRequerida = await buscarTipoPorID(cliente, idTipo);
-        const experienciaEscribano = resEscribano[0].capacidad;
-        const experienciaRequerida = resRequerida[0].experienciarequerida;
-        if(Experiencia[experienciaRequerida] <= Experiencia[experienciaEscribano]){
+        if(await tieneExperienciaRequerida(cliente, matricula, idTipo)){
             listaFiltrada.push(linea);
         }
     }
+
     return listaFiltrada;
 }
 
