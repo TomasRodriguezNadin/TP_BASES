@@ -1,6 +1,6 @@
 import * as Express from "express";
 import { Client } from 'pg';
-import { actualizarTablaAlumnosJSON, borrarAlumnoDeLaTabla, buscarTodosLosAlumnos, editarAlumnoDeTabla, ordenarTodosLosAlumnos } from "./acciones/accionesSQL.ts";
+import { actualizarTablasJSON, borrarAlumnoDeLaTabla, buscarTodosLosAlumnos, editarAlumnoDeTabla, ordenarTodosLosAlumnos } from "./acciones/accionesSQL.ts";
 import { atenderPedido } from "./servidor.ts";
 import { requireAuthAPI } from "./servidor.ts";
 
@@ -14,7 +14,7 @@ async function obtenerAlumnos(cliente: Client, req, res){
 async function agregarAlumno(cliente: Client, req, res){
     const alumno = req.body;
     console.log("Recibiendo alumno");
-    await actualizarTablaAlumnosJSON(cliente, [alumno]);
+    await actualizarTablasJSON(cliente, "alumnos", [alumno]);
     res.json("OK");
 }
 

@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "node:url";
 import { generarCertificadoPorFechaServidor, generarCertificadoPorLu} from './acciones/generacionCertificados.ts';
-import {actualizarTablaAlumnosJSON, buscarAlumnoPorLU} from "./acciones/accionesSQL.ts";
+import {actualizarTablasJSON, buscarAlumnoPorLU} from "./acciones/accionesSQL.ts";
 import { warn } from "node:console";
 import { generarCRUD } from "./crud.ts";
 import session from 'express-session';
@@ -140,7 +140,7 @@ const HTML_MENU=
         <p>menu</p>
         <p><a href="/app/lu">Imprimir certificado por LU</a></p>
         <p><a href="/app/fecha">Imprimir certificado por fecha de trámite</a></p>
-        <p><a href="/app/archivo-json">Subir .csv con novedades de alumnos</a></p>
+        <p><a href="/app/archivo-json">Subir .csv</a></p>
         <p><a href="/app/alumnos">Ver tabla de alumnos</a></p>
     </body>
 </html>
@@ -214,6 +214,17 @@ const HTML_ARCHIVO_JSON=
   <input type="file" id="csvFile" accept=".csv" />
   <button onclick="handleUpload()">Procesar y Enviar</button>
 
+  <!-- Selector de opciones -->
+  <label for="opcion">Seleccioná una opción:</label>
+  <select id="opcion">
+    <option value="">-- Elegí una opción --</option>
+    <option value="1" label = "escribanos">Escribanos</option>
+    <option value="2" label = "clientes">Clientes</option>
+    <option value="3" label = "escrituras">Escrituras</option>
+  </select>
+
+  <br><br>
+
   <script>
     function parseCSV(text) {
       const lines = text.trim().split(/\\r?\\n/);
@@ -236,9 +247,23 @@ const HTML_ARCHIVO_JSON=
         alert('Por favor seleccioná un archivo CSV.');
         return;
       }
+        
+      const seleccionar = document.getElementById('opcion') as HTMLSelectElement;
+      const optionSeleccionada = seleccionar.options[seleccionar.selectedIndex];
+
+      const opcion = opcionSeleccionada.label;
+      if (opcion == 0) {
+        alert('Por favor seleccioná una opción antes de continuar.');
+        return;
+      }
 
       const text = await file.text();
       const jsonData = parseCSV(text);
+
+      const aEnviar = {
+        tabla: opcion,   
+        data: jsonData 
+      };
 
       try {
         const response = await fetch('../api/v0/alumnos', {
@@ -246,7 +271,7 @@ const HTML_ARCHIVO_JSON=
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(jsonData)
+          body: JSON.stringify(aEnviar)
         });
 
         if (response.ok) {
@@ -295,10 +320,11 @@ async function enviarHTMLFecha(cliente: Client, req, res){
     await enviarHTML(parametro, cliente, generarCertificadoPorFechaServidor, res);
 }
 
-async function cargarAlumnosJSON(cliente: Client, req, res){
-    const parametro = req.body;
-    await actualizarTablaAlumnosJSON(cliente, parametro);
-    console.log("Alumnos cargados correctamente");
+async function cargarJSON(cliente: Client, req, res){
+    const {tabla, data} = req.body;
+
+    await actualizarTablasJSON(cliente, tabla, [data]);
+    console.log(tabla + " cargados correctamente");
 }
 
 export async function atenderPedido(respuesta: Function, mensajeError: string, req, res){
@@ -325,7 +351,7 @@ app.get('/api/v0/fecha/:fecha', requireAuthAPI, async (req, res) => {
 })
 
 app.patch('/api/v0/alumnos', requireAuthAPI, async (req, res) => {
-    await atenderPedido(cargarAlumnosJSON, "No se pudieron cargar los alumnos a la tabla", req, res);
+    await atenderPedido(cargarJSON, "No se pudieron cargar los alumnos a la tabla", req, res);
 })
 
 await generarCRUD(app, "/api/alumnos");

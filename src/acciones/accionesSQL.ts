@@ -28,6 +28,7 @@ export async function editarAlumnoDeTabla(client: Client, alumno: Alumno){
 }
 
 export async function actualizarTabla(client:Client, tabla: string, lista:string[], columnas:string[]){
+    
     for(const linea of lista){
         const datos = linea.split(',').map(value => value.trim());
         const instruccion = `INSERT INTO TP.${tabla} (${columnas.join(', ')}) VALUES
@@ -37,15 +38,21 @@ export async function actualizarTabla(client:Client, tabla: string, lista:string
 }
 
 
-export async function actualizarTablaAlumnosJSON(cliente: Client, listaAlumnos: Alumno[]){
-    const query = `INSERT INTO TP.alumnos (lu,nombre,apellido,titulo,titulo_en_tramite,egreso)
-                    VALUES (#[lu],#[nombre],#[apellido],#[titulo],#[titulo_en_tramite],#[egreso])`;
-    for(const alumno of listaAlumnos){
-        let queryAlumno = query;
-        for(const [key, value] of Object.entries(alumno)){
-            queryAlumno = queryAlumno.replace(`#[${key}]`, value === '' ? 'null' : sqlLiteral(value) );
-        }
-        await cliente.query(queryAlumno);
+export async function actualizarTablasJSON(cliente: Client, tabla: string, contenidos:Object[]){
+    
+    for(const ob of contenidos){
+        const columnas = Object.keys(ob).join(', ');
+        const valores = Object.values(ob);
+
+        const aInsertar = valores.map((_, i) => `$${i+1}`).join(', ');
+
+        const instruccion = `INSERT INTO TP.${tabla} (${columnas}) VALUES
+                            (${aInsertar})`;
+
+        console.log(instruccion);
+
+        await cliente.query(instruccion, valores);
+
     }
 }
 
