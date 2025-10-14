@@ -38,17 +38,16 @@
       tbody.innerHTML = '';
       filas.forEach(f => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${f.lu}</td>
-          <td>${f.nombre}</td>
-          <td>${f.apellido}</td>
-          <td>${f.titulo || ''}</td>
-          <td>${f.titulo_en_tramite || ''}</td>
-          <td>${f.egreso || ''}</td>
+        let html = "";
+        for ([key, value] of f){
+          html += `<td>${value}</td>\n`;
+        }
+        html += `
           <td>
             <button onclick="editarAlumno('${f.lu}', '${f.nombre}', '${f.apellido}', '${f.titulo}', '${f.titulo_en_tramite}', '${f.egreso}')">Editar</button>
             <button onclick="eliminarAlumno('${a.lu}')">Borrar</button>
           </td>`;
+        tr.innerHTML = html;
         tbody.appendChild(tr);
       });
     }
