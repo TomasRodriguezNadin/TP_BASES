@@ -64,14 +64,17 @@ export async function borrarAlumnoDeLaTabla(cliente: Client, lu_alumno: string){
 }
 
 async function buscarTabla(client: Client, tabla: string, filtro: filtro){
-    let instruccion = `SELECT * FROM tp.${tabla}
-                        WHERE `;
-    let condiciones: string[] = [];
-    for (const [key, value] of Object.entries(filtro)){
-        condiciones.push(`${key} = ${sqlLiteral(value)}`);
+    let instruccion = `SELECT * FROM tp.${tabla}`;
+
+    if(!('all' in filtro)){
+        instruccion += `\n WHERE `
+        let condiciones: string[] = [];
+        for (const [key, value] of Object.entries(filtro)){
+            condiciones.push(`${key} = ${sqlLiteral(value)}`);
+        }
+        const condicion = condiciones.join("\n AND ");
+        instruccion += condicion;
     }
-    const condicion = condiciones.join("\n AND ");
-    instruccion += condicion;
     console.log(instruccion);
 
     const alumnos = await client.query(instruccion);

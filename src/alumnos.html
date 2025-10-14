@@ -41,14 +41,9 @@
     const API_URL = '/api/alumnos';
     let ordenarPorAtributo = null;
 
-    async function ordenarPor(atributo) {
-      ordenarPorAtributo = atributo;
-      cargarAlumnos();
-    }
-    async function cargarAlumnos() {
-      const url = ordenarPorAtributo ? `${API_URL}/${ordenarPorAtributo}` : API_URL;
-      const res = await fetch(url);
-      const alumnos = await res.json();
+    let alumnos = [];
+
+    async function actualizarTabla(){
       const tbody = document.querySelector('#alumnosTable tbody');
       tbody.innerHTML = '';
       alumnos.forEach(a => {
@@ -66,6 +61,29 @@
           </td>`;
         tbody.appendChild(tr);
       });
+    }
+
+    async function ordenarPor(atributo) {
+      ordenarPorAtributo = atributo;
+      alumnos.sort((a, b) => {
+            const valorA = (a[atributo] || '').toString().toLowerCase();
+            const valorB = (b[atributo] || '').toString().toLowerCase();
+
+            if (valorA === '') return 1;
+            if (valorB === '') return -1;
+
+            return valorA < valorB ? -1 :
+                    valorB < valorA ? 1 :
+                    0;
+      });
+      actualizarTabla();
+    }
+
+    async function cargarAlumnos() {
+      const url = API_URL;
+      const res = await fetch(url);
+      alumnos = await res.json();
+      actualizarTabla();
     }
 
     async function eliminarAlumno(lu) {

@@ -56,8 +56,4 @@ export async function generarCRUD(app: Express.Application, ruta: string){
     app.put(`${ruta}/:lu`, requireAuthAPI, async (req, res) => {
         await atenderPedido(editarAlumno, "Error al editar el alumno", req, res);
     })
-
-    app.get(`${ruta}/:atributo`, requireAuthAPI, async (req, res) => {
-        await atenderPedido(ordenarAlumnos, "Error al ordenar los alumnos", req, res);
-    });
 }
