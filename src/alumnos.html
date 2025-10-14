@@ -36,17 +36,17 @@
     async function actualizarTabla(){
       const tbody = document.querySelector('#Table tbody');
       tbody.innerHTML = '';
-      filas.forEach(a => {
+      filas.forEach(f => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${a.lu}</td>
-          <td>${a.nombre}</td>
-          <td>${a.apellido}</td>
-          <td>${a.titulo || ''}</td>
-          <td>${a.titulo_en_tramite || ''}</td>
-          <td>${a.egreso || ''}</td>
+          <td>${f.lu}</td>
+          <td>${f.nombre}</td>
+          <td>${f.apellido}</td>
+          <td>${f.titulo || ''}</td>
+          <td>${f.titulo_en_tramite || ''}</td>
+          <td>${f.egreso || ''}</td>
           <td>
-            <button onclick="editarAlumno('${a.lu}', '${a.nombre}', '${a.apellido}', '${a.titulo}', '${a.titulo_en_tramite}', '${a.egreso}')">Editar</button>
+            <button onclick="editarAlumno('${f.lu}', '${f.nombre}', '${f.apellido}', '${f.titulo}', '${f.titulo_en_tramite}', '${f.egreso}')">Editar</button>
             <button onclick="eliminarAlumno('${a.lu}')">Borrar</button>
           </td>`;
         tbody.appendChild(tr);

@@ -7,7 +7,9 @@ import path from "path";
 import { fileURLToPath } from "node:url";
 import {readFile} from 'node:fs/promises';
 
-const tablas = ["alumnos"]
+const tablas = [
+    {tabla: "alumnos", Titulo: "Alumnos"}
+]
 
 async function obtenerAlumnos(cliente: Client, req, res){
     console.log("Obteniendo los alumnos");
