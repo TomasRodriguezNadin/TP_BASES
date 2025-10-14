@@ -12,26 +12,16 @@
 <body>
   <h2 style="text-align:center;">Lista de Alumnos</h2>
 
-  <form id="alumnoForm">
-    <input id="lu" placeholder="LU" required />
-    <input id="nombre" placeholder="Nombre" required />
-    <input id="apellido" placeholder="Apellido" required />
-    <input id="titulo" placeholder="Título" />
-    <input id="titulo_en_tramite" placeholder="Título en trámite" />
-    <input id="egreso" placeholder="Egreso" />
+  <form id="Form">
+    #[Form]
     <button type="submit">Agregar Alumno</button>
   </form>
 
-  <table id="alumnosTable">
+  <table id="Table">
     <thead>
       <tr>
-      <th>LU <button onclick="ordenarPor('lu')">↓</button></th>
-      <th>Nombre <button onclick="ordenarPor('nombre')">↓</button></th>
-      <th>Apellido <button onclick="ordenarPor('apellido')">↓</button></th>
-      <th>Título <button onclick="ordenarPor('titulo')">↓</button></th>
-      <th>Título en trámite <button onclick="ordenarPor('titulo_en_tramite')">↓</button></th>
-      <th>Egreso <button onclick="ordenarPor('egreso')">↓</button></th>
-      <th>Acciones</th>
+      #[Table]
+      <th>acciones</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -41,12 +31,12 @@
     const API_URL = '/api/alumnos';
     let ordenarPorAtributo = null;
 
-    let alumnos = [];
+    let filas = [];
 
     async function actualizarTabla(){
-      const tbody = document.querySelector('#alumnosTable tbody');
+      const tbody = document.querySelector('#Table tbody');
       tbody.innerHTML = '';
-      alumnos.forEach(a => {
+      filas.forEach(a => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${a.lu}</td>
@@ -65,7 +55,7 @@
 
     async function ordenarPor(atributo) {
       ordenarPorAtributo = atributo;
-      alumnos.sort((a, b) => {
+      filas.sort((a, b) => {
             const valorA = (a[atributo] || '').toString().toLowerCase();
             const valorB = (b[atributo] || '').toString().toLowerCase();
 
@@ -82,12 +72,12 @@
     async function cargarAlumnos() {
       const url = API_URL;
       const res = await fetch(url);
-      alumnos = await res.json();
+      filas = await res.json();
       actualizarTabla();
     }
 
     async function eliminarAlumno(lu) {
-      if (!confirm('¿Seguro que deseas borrar este alumno?')) return;
+      if (!confirm('¿Seguro que deseas borrar este elemento?')) return;
       await fetch(`${API_URL}/${encodeURIComponent(lu)}`, { method: 'DELETE' });
       cargarAlumnos();
     }
@@ -114,9 +104,9 @@
       cargarAlumnos();
     }
 
-    document.getElementById('alumnoForm').addEventListener('submit', async e => {
+    document.getElementById('Form').addEventListener('submit', async e => {
       e.preventDefault();
-      const alumno = {
+      const fila = {
         lu: document.getElementById('lu').value,
         nombre: document.getElementById('nombre').value,
         apellido: document.getElementById('apellido').value,
@@ -127,7 +117,7 @@
       await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(alumno)
+        body: JSON.stringify(fila)
       });
       e.target.reset();
       cargarAlumnos();

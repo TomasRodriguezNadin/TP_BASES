@@ -1,8 +1,6 @@
 import express from "express";
 import { Client } from 'pg';
 import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "node:url";
 import { generarCertificadoPorFechaServidor, generarCertificadoPorLu} from './acciones/generacionCertificados.ts';
 import {actualizarTablasJSON, buscarAlumnoPorLU} from "./acciones/accionesSQL.ts";
 import { warn } from "node:console";
@@ -41,7 +39,7 @@ app.use(session({
     }
 }));
 
-function requireAuth(req: Request, res: Response, next: NextFunction) {
+export function requireAuth(req: Request, res: Response, next: NextFunction) {
     if (req.session.usuario) {
         next();
     } else {
@@ -293,13 +291,6 @@ const HTML_ARCHIVO_JSON=
 
 app.get('/app/archivo-json', requireAuth, (_, res) => {
     res.send(HTML_ARCHIVO_JSON)
-})
-
-
-app.get('/app/alumnos', requireAuth, (_, res) => {
-    const fileName = fileURLToPath(import.meta.url);
-    const dirName = path.dirname(fileName);
-    res.sendFile(path.join(dirName, "alumnos.html"));
 })
 
 
