@@ -1,40 +1,46 @@
 import * as Express from "express";
 import { Client } from 'pg';
-import { actualizarTablasJSON, borrarAlumnoDeLaTabla, buscarTodosLosAlumnos, editarAlumnoDeTabla, obtenerAtributosTabla, obtenerClavePrimariaTabla, ordenarTodosLosAlumnos } from "./acciones/accionesSQL.ts";
-import { atenderPedido } from "./servidor.ts";
+import { actualizarTablasJSON, borrarFilaDeLaTabla, buscarTodosEnTabla, editarFilaDeTabla, obtenerAtributosTabla, obtenerClavePrimariaTabla} from "./acciones/accionesSQL.ts";
 import { requireAuthAPI, requireAuth } from "./servidor.ts";
 import path from "path";
 import { fileURLToPath } from "node:url";
 import {readFile} from 'node:fs/promises';
+import { ERROR } from "./servidor.ts";
 
-const tablas = [
-    {tabla: "alumnos", Titulo: "Alumnos"}
+interface datosTabla {
+    tabla: string,
+    titulo: string,
+    ruta: string
+}
+
+const tables: datosTabla[] = [
+    {tabla: "alumnos", titulo: "Alumnos", ruta: "/api/alumnos"},
+    {tabla: "escribanos", titulo: "escribanos", ruta: "/api/escribanos"},
+    {tabla: "clientes", titulo: "clientes", ruta: "/api/clientes"},
+    {tabla: "tipoescrituras", titulo: "Tipos de escrituras", ruta: "/api/tipoescrituras"}
 ]
 
-async function obtenerAlumnos(cliente: Client, req, res){
-    console.log("Obteniendo los alumnos");
-    const tabla = await buscarTodosLosAlumnos(cliente);
-    console.log(tabla);
-    res.json(tabla);
+async function obtenerFilas(cliente: Client, tabla: string, _, res){
+    const filas = await buscarTodosEnTabla(cliente, tabla);
+    console.log(filas);
+    res.json(filas);
 }
 
-async function agregarAlumno(cliente: Client, req, res){
-    const alumno = req.body;
-    console.log("Recibiendo alumno");
-    await actualizarTablasJSON(cliente, "alumnos", [alumno]);
+async function agregarFila(cliente: Client, tabla: string, req, res){
+    const fila = req.body;
+    await actualizarTablasJSON(cliente, tabla, [fila]);
     res.json("OK");
 }
 
-async function borrarAlumno(cliente: Client, req, res){
-    console.log(`Borrando alumno con lu: ${req.params.lu}`);
-    await borrarAlumnoDeLaTabla(cliente, req.params.lu);
+async function borrarFila(cliente: Client, tabla: string, req, res){
+    await borrarFilaDeLaTabla(cliente, tabla, req.params);
     res.json("OK");
 }
 
-async function editarAlumno(cliente: Client, req, res){
-    const alumno = req.body;
-    console.log(`Editando alumno ${alumno.lu}`);
-    await editarAlumnoDeTabla(cliente, alumno);
+async function editarFila(cliente: Client, tabla: string, req, res){
+    const fila = req.body;
+    console.log(req.body, tabla);
+    await editarFilaDeTabla(cliente, tabla, fila);
     res.json("OK");
 }
 
@@ -51,7 +57,7 @@ function generarForm(atributos: string[]): string{
                                 .join(`\n`);
 }
 
-async function generarHTML(tabla: string): Promise<string>{
+async function generarHTML(datos: datosTabla): Promise<string>{
     const fileName = fileURLToPath(import.meta.url);
     const dirName = path.dirname(fileName);
     const pathTemplate = path.join(dirName, "alumnos.html");
@@ -62,41 +68,71 @@ async function generarHTML(tabla: string): Promise<string>{
     const cliente = new Client();
     await cliente.connect();
 
-    let resultado = await obtenerAtributosTabla(cliente, tabla);
-    const atributos = resultado.map(obj => Object.values(obj)[0]);
+    const atributos = await obtenerAtributosTabla(cliente, datos.tabla);
 
-    resultado = await obtenerClavePrimariaTabla(cliente, tabla);
-    const clavePrimaria = resultado.map(obj => Object.values(obj)[0]);
+    const clavePrimaria = await obtenerClavePrimariaTabla(cliente, datos.tabla);
     cliente.end();
 
     html = html.replace(`#[Attr]`, JSON.stringify(atributos));
     html = html.replace("#[PK]", JSON.stringify(clavePrimaria));
+
     const table = generarTable(atributos);
     html = html.replace("#[Table]", table);
+
     const form = generarForm(atributos);
     html = html.replace(`#[Form]`, form);
+
+    html = html.replace(`#[Ruta]`, `"${datos.ruta}"`);
     return html;
 }
 
+async function atenderPedido(respuesta: Function, tabla: string, req, res){
+    console.log(req.params, req.query, req.body);
+    const clientDB = new Client();
+    await clientDB.connect();
+
+    try{
+        await respuesta(clientDB, tabla, req, res);
+    }catch(err){
+        console.log(`${err}`);
+        res.status(404).send(ERROR.replace("error", err));
+    }finally{
+        await clientDB.end();
+    }
+}
+
 export async function generarCRUD(app: Express.Application, ruta: string){
-    app.get('/app/alumnos', requireAuth, async (_, res) => {
-        const html = await generarHTML("alumnos")
-        res.send(html);
-    })
+    for (const datosTabla of tables){
 
-    app.get(`${ruta}`, requireAuthAPI, async (req, res) => {
-        await atenderPedido(obtenerAlumnos, "Error al listar los alumnos", req, res);
-    });
+        let rutaParametros = `${datosTabla.ruta}`;
+        const client = new Client();
+        await client.connect();
 
-    app.post(`${ruta}`, requireAuthAPI, async (req, res) => {
-        await atenderPedido(agregarAlumno, "Error al agregar alumno", req, res)
-    })
+        const clavePrimaria = await obtenerClavePrimariaTabla(client, datosTabla.tabla);
+        for (const clave of clavePrimaria){
+            rutaParametros += `/:${clave}`;
+        }
 
-    app.delete(`${ruta}/:lu`, requireAuthAPI, async (req, res) => {
-        await atenderPedido(borrarAlumno, "Error al borrar al alumno", req, res);
-    })
+        app.get(`/app/${datosTabla.tabla}`, requireAuth, async (_, res) => {
+            const html = await generarHTML(datosTabla);
+            res.send(html);
+        })
 
-    app.put(`${ruta}/:lu`, requireAuthAPI, async (req, res) => {
-        await atenderPedido(editarAlumno, "Error al editar el alumno", req, res);
-    })
+        app.get(`${datosTabla.ruta}`, requireAuthAPI, async (req, res) => {
+            await atenderPedido(obtenerFilas, datosTabla.tabla, req, res);
+        });
+
+        app.post(`${datosTabla.ruta}`, requireAuthAPI, async (req, res) => {
+            await atenderPedido(agregarFila, datosTabla.tabla, req, res)
+        })
+
+        app.delete(rutaParametros, requireAuthAPI, async (req, res) => {
+            await atenderPedido(borrarFila, datosTabla.tabla, req, res);
+        })
+
+        app.put(rutaParametros, requireAuthAPI, async (req, res) => {
+            await atenderPedido(editarFila, datosTabla.tabla, req, res);
+        })
+
+    }
 }

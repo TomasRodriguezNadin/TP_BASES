@@ -28,7 +28,7 @@
   </table>
 
   <script>
-    const API_URL = '/api/alumnos';
+    const API_URL = #[Ruta];
     const clavesPrimarias = #[PK];
     const atributos = #[Attr]
     let ordenarPorAtributo = null;
@@ -97,7 +97,7 @@
       let nuevaFila = { ...fila };
       const elementosNoPrimarios = Object.entries(fila).filter(([key, _]) => !clavesPrimarias.includes(key));
       for ([key, value] of elementosNoPrimarios){
-        nuevaFila[key] = prompt(`${key}: `, value);
+        nuevaFila[key] = prompt(`${key}: `, value).toString();
       }
 
       let ruta = `${API_URL}`;

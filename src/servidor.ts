@@ -140,6 +140,9 @@ const HTML_MENU=
         <p><a href="/app/fecha">Imprimir certificado por fecha de trámite</a></p>
         <p><a href="/app/archivo-json">Subir .csv</a></p>
         <p><a href="/app/alumnos">Ver tabla de alumnos</a></p>
+        <p><a href="/app/escribanos">Ver tabla de escribanos</a></p>
+        <p><a href="/app/clientes">Ver tabla de clientes</a></p>
+        <p><a href="/app/tiposEscritura">Ver tabla de tipos de escrituras</a></p>
     </body>
 </html>
 `;
@@ -296,7 +299,7 @@ app.get('/app/archivo-json', requireAuth, (_, res) => {
 
 // API DEL BACKEND
 var NO_IMPLEMENTADO='<code>ERROR 404 </code> <h1> No implementado aún ⚒<h1>';
-const ERROR = '<code>ERROR 404 </code> <h1> error <h1>';
+export const ERROR = '<code>ERROR 404 </code> <h1> error <h1>';
 
 async function enviarHTML(parametro: string, cliente: Client, generador: Function, res){
     const html = await generador(cliente, parametro);
@@ -321,7 +324,7 @@ async function cargarJSON(cliente: Client, req, res){
     console.log(tabla + " cargados correctamente");
 }
 
-export async function atenderPedido(respuesta: Function, mensajeError: string, req, res){
+async function atenderPedido(respuesta: Function, mensajeError: string, req, res){
     console.log(req.params, req.query, req.body);
     const clientDB = new Client();
     await clientDB.connect();

@@ -1,28 +1,29 @@
 import { Client } from 'pg'; 
 import type {Alumno} from '../tipos.ts';
 
-type filtro = {lu : string} | {fecha: string} | {orden: string} | {all: boolean} | {matricula: string} | {idTipo: string} | {nroprotocolo:string} | {anio:string}
+type filtro = Record<string, string> | {all: boolean};
 
-function sqlLiteral(literal:string|null): string{
+function sqlLiteral(literal:string|number|null): string{
     const res = (literal == null ? `null` : 
+                typeof literal == "number" ? `'${literal}'` :
                 typeof literal == "string" ? `'${literal.replace(/'/g, `''`)}'` : undefined);
 
-    if(res == undefined){
+    if(res === undefined){
         throw new Error(`${literal} no es una entrada valida para la base de datos`);
     }
 
     return res;
 }
 
-export async function obtenerAtributosTabla(client: Client, tabla: string){
+export async function obtenerAtributosTabla(client: Client, tabla: string): Promise<string[]>{
     const consultaAtributos = `SELECT column_name
                     FROM information_schema.columns
                     WHERE table_name = '${tabla}'`;
     const res = await client.query(consultaAtributos);
-    return res.rows;
+    return res.rows.map(obj => Object.values(obj)[0]);;
 }
 
-export async function obtenerClavePrimariaTabla(client: Client, tabla: string){
+export async function obtenerClavePrimariaTabla(client: Client, tabla: string): Promise<string[]>{
     const consultaPrimaryKey = `SELECT a.attname
                                 FROM pg_index i
                                 JOIN pg_attribute a ON a.attrelid = i.indrelid
@@ -30,24 +31,29 @@ export async function obtenerClavePrimariaTabla(client: Client, tabla: string){
                                 WHERE i.indrelid = 'TP.${tabla}'::regclass
                                 AND i.indisprimary;`
     const res = await client.query(consultaPrimaryKey);
-    return res.rows;
+    return res.rows.map(obj => Object.values(obj)[0]);;
 }
 
-export async function editarAlumnoDeTabla(client: Client, alumno: Alumno){
-    let consulta = `UPDATE tp.alumnos
+export async function editarFilaDeTabla(client: Client, tabla: string, fila: Record<string, string>){
+    let consulta = `UPDATE tp.${tabla}
                       SET`;
-    const entradasSinLU = Object.entries(alumno).filter(([key, _]) => {return key !== `lu`});
-    for (const [key, value] of entradasSinLU){
-        consulta += ` ${key} = ${sqlLiteral(value)},`
+    const clavePrimaria = await obtenerClavePrimariaTabla(client, tabla);
+    const entradasSinPK = Object.entries(fila).filter(([key, _]) => {return !clavePrimaria.includes(key)});
+    for (const [key, value] of entradasSinPK){
+        consulta += ` ${key} = ${sqlLiteral(value)},`;
     }
     // Para sacar la coma al final
     consulta = consulta.slice(0, -1);
-    consulta += `\n WHERE lu=${sqlLiteral(alumno.lu)}`;
+    let filtro = {};
+    for (const clave of clavePrimaria){
+        filtro[clave] = fila[clave];
+    }
+    consulta = agregarFiltroAInstruccion(consulta, filtro);
+    console.log(consulta);
     await client.query(consulta);
 }
 
 export async function actualizarTabla(client:Client, tabla: string, lista:string[], columnas:string[]){
-    
     for(const linea of lista){
         const datos = linea.split(',').map(value => value.trim());
         const instruccion = `INSERT INTO TP.${tabla} (${columnas.join(', ')}) VALUES
@@ -76,15 +82,7 @@ export async function actualizarTablasJSON(cliente: Client, tabla: string, conte
     }
 }
 
-export async function borrarAlumnoDeLaTabla(cliente: Client, lu_alumno: string){
-    let query = `DELETE FROM TP.alumnos 
-                WHERE lu = ${sqlLiteral(lu_alumno)}`;
-    await cliente.query(query);
-}
-
-async function buscarTabla(client: Client, tabla: string, filtro: filtro){
-    let instruccion = `SELECT * FROM tp.${tabla}`;
-
+function agregarFiltroAInstruccion(instruccion: string, filtro: filtro): string{
     if(!('all' in filtro)){
         instruccion += `\n WHERE `
         let condiciones: string[] = [];
@@ -94,6 +92,19 @@ async function buscarTabla(client: Client, tabla: string, filtro: filtro){
         const condicion = condiciones.join("\n AND ");
         instruccion += condicion;
     }
+    return instruccion;
+}
+
+export async function borrarFilaDeLaTabla(cliente: Client, tabla: string, filtro: filtro){
+    let query = `DELETE FROM TP.${tabla}`;
+    query = agregarFiltroAInstruccion(query, filtro);
+    await cliente.query(query);
+}
+
+async function buscarTabla(client: Client, tabla: string, filtro: filtro){
+    let instruccion = `SELECT * FROM tp.${tabla}`;
+    instruccion = agregarFiltroAInstruccion(instruccion, filtro);
+
     console.log(instruccion);
 
     const alumnos = await client.query(instruccion);
@@ -108,12 +119,8 @@ export async function buscarAlumnoPorLU(client:Client, lu:string){
     return await buscarTabla(client,"alumnos", {lu: lu});
 }
 
-export async function buscarTodosLosAlumnos(client: Client){
-    return await buscarTabla(client,"alumnos", {all: true});
-}
-
-export async function ordenarTodosLosAlumnos(client: Client, atributo: string) {
-    return await buscarTabla(client,"alumnos", {orden: atributo});
+export async function buscarTodosEnTabla(client: Client, tabla: string){
+    return await buscarTabla(client, tabla, {all: true});
 }
 
 export async function buscarDatosDeEscritura(client: Client, matricula: string, nroProtocolo: string, anio: string){
