@@ -1,6 +1,6 @@
 import * as Express from "express";
 import { Client } from 'pg';
-import { actualizarTablasJSON, borrarAlumnoDeLaTabla, buscarTodosLosAlumnos, editarAlumnoDeTabla, ordenarTodosLosAlumnos } from "./acciones/accionesSQL.ts";
+import { actualizarTablasJSON, borrarAlumnoDeLaTabla, buscarTodosLosAlumnos, editarAlumnoDeTabla, obtenerAtributosTabla, obtenerClavePrimariaTabla, ordenarTodosLosAlumnos } from "./acciones/accionesSQL.ts";
 import { atenderPedido } from "./servidor.ts";
 import { requireAuthAPI, requireAuth } from "./servidor.ts";
 import path from "path";
@@ -38,6 +38,19 @@ async function editarAlumno(cliente: Client, req, res){
     res.json("OK");
 }
 
+function generarTable(atributos: string[]): string{
+    return atributos.map((atributo: string) => 
+                                `<th>${atributo} <button onclick="ordenarPor('${atributo}')">↓</button></th>`)
+                                .join(`\n`);
+
+}
+
+function generarForm(atributos: string[]): string{
+    return atributos.map((atributo: string) => 
+                                `<input id="${atributo}" placeholder="${atributo}" required />`)
+                                .join(`\n`);
+}
+
 async function generarHTML(tabla: string): Promise<string>{
     const fileName = fileURLToPath(import.meta.url);
     const dirName = path.dirname(fileName);
@@ -48,21 +61,19 @@ async function generarHTML(tabla: string): Promise<string>{
 
     const cliente = new Client();
     await cliente.connect();
-    const consulta = `SELECT column_name
-                    FROM information_schema.columns
-                    WHERE table_name = 'alumnos'`;
-    console.log(`Haciendo la query ${consulta}`);
-    const resultado = await cliente.query(consulta);
-    const atributos = resultado.rows.map(obj => Object.values(obj)[0]);
+
+    let resultado = await obtenerAtributosTabla(cliente, tabla);
+    const atributos = resultado.map(obj => Object.values(obj)[0]);
+
+    resultado = await obtenerClavePrimariaTabla(cliente, tabla);
+    const clavePrimaria = resultado.map(obj => Object.values(obj)[0]);
     cliente.end();
-    console.log(atributos);
-    const table = atributos.map((atributo: string) => 
-                                `<th>${atributo} <button onclick="ordenarPor('${atributo}')">↓</button></th>`)
-                                .join(`\n`);
-    const form = atributos.map((atributo: string) => 
-                                `<input id="${atributo}" placeholder="${atributo}" required />`)
-                                .join(`\n`);
+
+    html = html.replace(`#[Attr]`, JSON.stringify(atributos));
+    html = html.replace("#[PK]", JSON.stringify(clavePrimaria));
+    const table = generarTable(atributos);
     html = html.replace("#[Table]", table);
+    const form = generarForm(atributos);
     html = html.replace(`#[Form]`, form);
     return html;
 }

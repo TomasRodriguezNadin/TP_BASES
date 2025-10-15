@@ -29,6 +29,8 @@
 
   <script>
     const API_URL = '/api/alumnos';
+    const clavesPrimarias = #[PK];
+    const atributos = #[Attr]
     let ordenarPorAtributo = null;
 
     let filas = [];
@@ -36,16 +38,16 @@
     async function actualizarTabla(){
       const tbody = document.querySelector('#Table tbody');
       tbody.innerHTML = '';
-      filas.forEach(f => {
+      filas.forEach((f, indice) => {
         const tr = document.createElement('tr');
         let html = "";
-        for ([key, value] of f){
-          html += `<td>${value}</td>\n`;
+        for (value of Object.values(f)){
+          html += `<td>${value || ''}</td>\n`;
         }
         html += `
           <td>
-            <button onclick="editarAlumno('${f.lu}', '${f.nombre}', '${f.apellido}', '${f.titulo}', '${f.titulo_en_tramite}', '${f.egreso}')">Editar</button>
-            <button onclick="eliminarAlumno('${a.lu}')">Borrar</button>
+            <button onclick="editarFila(${indice})">Editar</button>
+            <button onclick="eliminarFila(${indice})">Borrar</button>
           </td>`;
         tr.innerHTML = html;
         tbody.appendChild(tr);
@@ -53,13 +55,15 @@
     }
 
     async function ordenarPor(atributo) {
+      if(ordenarPorAtributo == atributo) return;
+
       ordenarPorAtributo = atributo;
       filas.sort((a, b) => {
             const valorA = (a[atributo] || '').toString().toLowerCase();
             const valorB = (b[atributo] || '').toString().toLowerCase();
 
-            if (valorA === '') return 1;
             if (valorB === '') return -1;
+            if (valorA === '') return 1;
 
             return valorA < valorB ? -1 :
                     valorB < valorA ? 1 :
@@ -68,61 +72,64 @@
       actualizarTabla();
     }
 
-    async function cargarAlumnos() {
+    async function cargarTabla() {
       const url = API_URL;
       const res = await fetch(url);
       filas = await res.json();
       actualizarTabla();
     }
 
-    async function eliminarAlumno(lu) {
+    async function eliminarFila(indice) {
       if (!confirm('¿Seguro que deseas borrar este elemento?')) return;
-      await fetch(`${API_URL}/${encodeURIComponent(lu)}`, { method: 'DELETE' });
-      cargarAlumnos();
+      const fila = filas[indice];
+      let ruta = `${API_URL}`;
+      for (const clave of clavesPrimarias){
+        console.log(clave);
+        ruta += `/${encodeURIComponent(fila[clave])}`
+      }
+      console.log(ruta);
+      await fetch(ruta, { method: 'DELETE' });
+      cargarTabla();
     }
 
-    async function editarAlumno(lu, nombre, apellido, titulo, titulo_en_tramite, egreso) {
-      const nuevoNombre = prompt('Nombre:', nombre);
-      const nuevoApellido = prompt('Apellido:', apellido);
-      const nuevoTitulo = prompt('Título:', titulo);
-      const nuevoTramite = prompt('Título en trámite:', titulo_en_tramite);
-      const nuevoEgreso = prompt('Egreso:', egreso);
-      if (!nuevoNombre || !nuevoApellido) return;
-      await fetch(`${API_URL}/${encodeURIComponent(lu)}`, {
+    async function editarFila(indice) {
+      const fila = filas[indice];
+      let nuevaFila = { ...fila };
+      const elementosNoPrimarios = Object.entries(fila).filter(([key, _]) => !clavesPrimarias.includes(key));
+      for ([key, value] of elementosNoPrimarios){
+        nuevaFila[key] = prompt(`${key}: `, value);
+      }
+
+      let ruta = `${API_URL}`;
+      for (const clave of clavesPrimarias){
+        ruta += `/${encodeURIComponent(fila[clave])}`;
+      }
+
+      await fetch(ruta, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lu: lu,
-          nombre: nuevoNombre,
-          apellido: nuevoApellido,
-          titulo: nuevoTitulo,
-          titulo_en_tramite: nuevoTramite,
-          egreso: nuevoEgreso
-        })
+        body: JSON.stringify(nuevaFila)
       });
-      cargarAlumnos();
+      cargarTabla();
     }
 
     document.getElementById('Form').addEventListener('submit', async e => {
       e.preventDefault();
-      const fila = {
-        lu: document.getElementById('lu').value,
-        nombre: document.getElementById('nombre').value,
-        apellido: document.getElementById('apellido').value,
-        titulo: document.getElementById('titulo').value,
-        titulo_en_tramite: document.getElementById('titulo_en_tramite').value,
-        egreso: document.getElementById('egreso').value
-      };
+      let fila = {};
+
+      for (const atr of atributos){
+        fila[atr] = document.getElementById(`${atr}`).value
+      }
       await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(fila)
       });
       e.target.reset();
-      cargarAlumnos();
+      cargarTabla();
     });
 
-    cargarAlumnos();
+    cargarTabla();
   </script>
 </body>
 </html>

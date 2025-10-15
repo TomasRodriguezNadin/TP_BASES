@@ -14,6 +14,25 @@ function sqlLiteral(literal:string|null): string{
     return res;
 }
 
+export async function obtenerAtributosTabla(client: Client, tabla: string){
+    const consultaAtributos = `SELECT column_name
+                    FROM information_schema.columns
+                    WHERE table_name = '${tabla}'`;
+    const res = await client.query(consultaAtributos);
+    return res.rows;
+}
+
+export async function obtenerClavePrimariaTabla(client: Client, tabla: string){
+    const consultaPrimaryKey = `SELECT a.attname
+                                FROM pg_index i
+                                JOIN pg_attribute a ON a.attrelid = i.indrelid
+                                    AND a.attnum = ANY(i.indkey)
+                                WHERE i.indrelid = 'TP.${tabla}'::regclass
+                                AND i.indisprimary;`
+    const res = await client.query(consultaPrimaryKey);
+    return res.rows;
+}
+
 export async function editarAlumnoDeTabla(client: Client, alumno: Alumno){
     let consulta = `UPDATE tp.alumnos
                       SET`;
