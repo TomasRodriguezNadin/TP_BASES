@@ -101,7 +101,7 @@ export async function borrarFilaDeLaTabla(cliente: Client, tabla: string, filtro
     await cliente.query(query);
 }
 
-async function buscarTabla(client: Client, tabla: string, filtro: filtro){
+export async function buscarTabla(client: Client, tabla: string, filtro: filtro){
     let instruccion = `SELECT * FROM tp.${tabla}`;
     instruccion = agregarFiltroAInstruccion(instruccion, filtro);
 

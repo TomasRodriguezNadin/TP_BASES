@@ -2,7 +2,7 @@ import { Client } from 'pg';
 import {readFile, unlink} from 'node:fs/promises';
 import { path_plantilla, path_plantilla_escritura } from '../constantes.ts';
 import { esLUValida, esFechaValida } from './validaciones.ts';
-import { buscarAlumnoPorLU, buscarAlumnosPorFecha, actualizarTabla, buscarEscribanoPorMatricula, buscarTipoPorID } from './accionesSQL.ts';
+import { buscarAlumnoPorLU, buscarAlumnosPorFecha, actualizarTabla, buscarEscribanoPorMatricula, buscarTipoPorID, buscarTabla } from './accionesSQL.ts';
 import { parsearCsv } from './accionesCSV.ts';
 import { Experiencia } from '../tipos.ts';
 import type {Alumno} from '../tipos.ts';
@@ -62,7 +62,17 @@ export async function generarCertificadoAlumno(alumno: Record<string, string>): 
     return certificado;
 }
 
-export async function generarEscritura(datosTramite: Record<string, string>): Promise<String> {
+export async function pedirEscrituras(cliente: Client, filtro: Record<string, string>): Promise<string[]>{
+    const escrituras = await buscarTabla(cliente, "escrituras", filtro);
+    let htmls: string[] = [];
+    for (const escritura of escrituras){
+        const html = await generarEscritura(escritura);
+        htmls.push(html);
+    }
+    return htmls;
+}
+
+export async function generarEscritura(datosTramite: Record<string, string>): Promise<string> {
     let certificado = await readFile(path_plantilla_escritura, {encoding: 'utf8'});
     for(const [key, value] of Object.entries(datosTramite)){
         certificado = certificado.replace(

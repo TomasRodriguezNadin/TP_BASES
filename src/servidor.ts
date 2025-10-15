@@ -1,7 +1,7 @@
 import express from "express";
 import { Client } from 'pg';
 import dotenv from "dotenv";
-import { generarCertificadoPorFechaServidor, generarCertificadoPorLu} from './acciones/generacionCertificados.ts';
+import { generarCertificadoPorFechaServidor, generarCertificadoPorLu, pedirEscrituras} from './acciones/generacionCertificados.ts';
 import {actualizarTablasJSON, buscarAlumnoPorLU} from "./acciones/accionesSQL.ts";
 import { warn } from "node:console";
 import { generarCRUD } from "./crud.ts";
@@ -136,6 +136,9 @@ const HTML_MENU=
     <body>
         <h1>AIDA</h1>
         <p>menu</p>
+        <p><a href="/app/escritura">Solicitar escritura</a></p>
+        <p><a href="/app/escriturasEscribano">Solicitar escrituras por escribano</a></p>
+        <p><a href="/app/escriturasCliente">Solicitar escrituras por cliente</a></p>
         <p><a href="/app/lu">Imprimir certificado por LU</a></p>
         <p><a href="/app/fecha">Imprimir certificado por fecha de trámite</a></p>
         <p><a href="/app/archivo-json">Subir .csv</a></p>
@@ -172,9 +175,82 @@ const HTML_LU=
     </body>
 </html>
 `;
-
 app.get('/app/lu', requireAuth, (_, res) => {
     res.send(HTML_LU)
+})
+
+const HTML_PEDIR_ESCRITURA=
+`<!doctype html>
+<html>
+    <head>
+        <meta charset="utf8">
+    </head>
+    <body>
+        <div>Obtener escritura</div>
+        #[labels]
+        <button id="btnEnviar">Pedir Escritura</button>
+        <script>
+            window.onload = function() {
+                document.getElementById("btnEnviar").onclick = function() {
+                    #[vars]
+                    window.location.href = "../api/v0/escritura#[Caso]" #[uri] ;
+                }
+            }
+        </script>
+    </body>
+</html>
+`;
+
+function generarMenuEscrituras(parametros: Record<string, string>[], caso: string): string{
+    let html = HTML_PEDIR_ESCRITURA;
+    let labels = "";
+    let variables = "";
+    let uriComponents = "";
+
+    for (const parametro of parametros){
+        labels += `<div><label>${parametro.titulo}: <input name=${parametro.atributo}></label></div>`;
+        variables += `const ${parametro.atributo} = document.getElementsByName("${parametro.atributo}")[0].value;`;
+        uriComponents += `+ "/" + encodeURIComponent(${parametro.atributo})`; 
+    }
+
+    html = html.replace("#[labels]", labels);
+    html = html.replace("#[vars]", variables);
+    html = html.replace("#[uri]", uriComponents);
+    html = html.replace("#[Caso]", caso)
+
+    return html;
+}
+
+app.get('/app/escritura', requireAuth, (_, res) => {
+    const parametros = [
+        {titulo: "Matricula", atributo: "matricula"},
+        {titulo: "Numero de Protocolo", atributo: "nroProtocolo"},
+        {titulo: "Año", atributo: "anio"}
+    ];
+
+    const html = generarMenuEscrituras(parametros, "");
+    
+    res.send(html);
+})
+
+app.get('/app/escriturasEscribano', requireAuth, (_, res) => {
+    const parametros = [
+        {titulo: "Matricula", atributo: "matricula"},
+    ];
+
+    const html = generarMenuEscrituras(parametros, "");
+    
+    res.send(html);
+})
+
+app.get('/app/escriturasCliente', requireAuth, (_, res) => {
+    const parametros = [
+        {titulo: "CUIT", atributo: "cuit"},
+    ];
+
+    const html = generarMenuEscrituras(parametros, "Cliente");
+    
+    res.send(html);
 })
 
 const HTML_FECHA=
@@ -306,6 +382,16 @@ async function enviarHTML(parametro: string, cliente: Client, generador: Functio
     res.send(html);
 }
 
+async function enviarHTMLEscritura(cliente: Client, req, res){
+    const html = await pedirEscrituras(cliente, req.params);
+    res.send(html[0]);
+}
+
+async function enviarHTMLEscrituras(cliente: Client, req, res){
+    const html = await pedirEscrituras(cliente, req.params);
+    res.send(html.join(`\n`));
+}
+
 async function enviarHTMLLU(cliente: Client, req, res){
     const parametro = req.params.lu;
     await enviarHTML(parametro, cliente, generarCertificadoPorLu, res);
@@ -341,6 +427,18 @@ async function atenderPedido(respuesta: Function, mensajeError: string, req, res
 
 app.get('/api/v0/lu/:lu', requireAuthAPI, async (req, res) => {
     await atenderPedido(enviarHTMLLU, "No se pudo generar el certificado para el alumno", req, res);
+})
+
+app.get('/api/v0/escritura/:matricula/:nroProtocolo/:anio', requireAuthAPI, async (req, res) => {
+    await atenderPedido(enviarHTMLEscritura, "No se pudo generar la escritura", req, res);
+})
+
+app.get('/api/v0/escritura/:matricula', requireAuthAPI, async (req, res) => {
+    await atenderPedido(enviarHTMLEscrituras, "No se pudo generar la escritura", req, res);
+})
+
+app.get('/api/v0/escrituraCliente/:cuit', requireAuthAPI, async (req, res) => {
+    await atenderPedido(enviarHTMLEscrituras, "No se pudo generar la escritura", req, res);
 })
 
 app.get('/api/v0/fecha/:fecha', requireAuthAPI, async (req, res) => {
