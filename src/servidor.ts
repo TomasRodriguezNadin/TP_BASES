@@ -91,11 +91,14 @@ app.post('/api/v0/auth/login', express.json(), async (req, res) => {
 });
 
 // API de logout
-/*
 app.post('/api/v0/auth/logout', (req, res) => {
-     ... 
+    req.session.destroy((err: any) => {
+        if (err) {
+            return res.status(500).json({ error: 'Error al cerrar sesión' });
+        }
+        return res.json({ success: true });
+    });
 });
-*/
 
 
 // API de registro
