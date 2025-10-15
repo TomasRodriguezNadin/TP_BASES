@@ -1,9 +1,8 @@
 tipo,parametro
-archivo,./base/entrada/ejemplo.csv
-lu,72/23
-lu,431/23
-lu,a
-asdf,5
-fecha,2025-05-18
-fecha,2022-03-01
-fecha,k
+archivo,escribanos,./base/entrada/ejemplo.csv
+archivo,clientes,./base/entrada/clientes.csv
+archivo,tipoEscrituras,./base/entrada/tipoEscritura.csv
+archivo,escrituras,./base/entrada/escrituras.csv
+archivo,escrituras,./base/entrada/escrituraSinEscribano.csv
+archivo,escrituras,./base/entrada/escriturasSinTipo.csv
+escritura,123,1,2024

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Alumnos</title>
+  <style>
+    table { border-collapse: collapse; width: 90%; margin: 20px auto; }
+    th, td { border: 1px solid #aaa; padding: 8px; text-align: left; }
+    form { margin: 20px auto; width: 90%; display: flex; gap: 10px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <h2 style="text-align:center;">Lista de Alumnos</h2>
+
+  <form id="Form">
+    #[Form]
+    <button type="submit">Agregar Alumno</button>
+  </form>
+
+  <table id="Table">
+    <thead>
+      <tr>
+      #[Table]
+      <th>acciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const API_URL = #[Ruta];
+    const clavesPrimarias = #[PK];
+    const atributos = #[Attr]
+    let ordenarPorAtributo = null;
+
+    let filas = [];
+
+    async function actualizarTabla(){
+      const tbody = document.querySelector('#Table tbody');
+      tbody.innerHTML = '';
+      filas.forEach((f, indice) => {
+        const tr = document.createElement('tr');
+        let html = "";
+        for (value of Object.values(f)){
+          html += `<td>${value || ''}</td>\n`;
+        }
+        html += `
+          <td>
+            <button onclick="editarFila(${indice})">Editar</button>
+            <button onclick="eliminarFila(${indice})">Borrar</button>
+          </td>`;
+        tr.innerHTML = html;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function ordenarPor(atributo) {
+      if(ordenarPorAtributo == atributo) return;
+
+      ordenarPorAtributo = atributo;
+      filas.sort((a, b) => {
+            const valorA = (a[atributo] || '').toString().toLowerCase();
+            const valorB = (b[atributo] || '').toString().toLowerCase();
+
+            if (valorB === '') return -1;
+            if (valorA === '') return 1;
+
+            return valorA < valorB ? -1 :
+                    valorB < valorA ? 1 :
+                    0;
+      });
+      actualizarTabla();
+    }
+
+    async function cargarTabla() {
+      const url = API_URL;
+      const res = await fetch(url);
+      filas = await res.json();
+      actualizarTabla();
+    }
+
+    async function eliminarFila(indice) {
+      if (!confirm('¿Seguro que deseas borrar este elemento?')) return;
+      const fila = filas[indice];
+      let ruta = `${API_URL}`;
+      for (const clave of clavesPrimarias){
+        console.log(clave);
+        ruta += `/${encodeURIComponent(fila[clave])}`
+      }
+      console.log(ruta);
+      await fetch(ruta, { method: 'DELETE' });
+      cargarTabla();
+    }
+
+    async function editarFila(indice) {
+      const fila = filas[indice];
+      let nuevaFila = { ...fila };
+      const elementosNoPrimarios = Object.entries(fila).filter(([key, _]) => !clavesPrimarias.includes(key));
+      for ([key, value] of elementosNoPrimarios){
+        nuevaFila[key] = prompt(`${key}: `, value).toString();
+      }
+
+      let ruta = `${API_URL}`;
+      for (const clave of clavesPrimarias){
+        ruta += `/${encodeURIComponent(fila[clave])}`;
+      }
+
+      await fetch(ruta, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nuevaFila)
+      });
+      cargarTabla();
+    }
+
+    document.getElementById('Form').addEventListener('submit', async e => {
+      e.preventDefault();
+      let fila = {};
+
+      for (const atr of atributos){
+        fila[atr] = document.getElementById(`${atr}`).value
+      }
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fila)
+      });
+      e.target.reset();
+      cargarTabla();
+    });
+
+    cargarTabla();
+  </script>
+</body>
+</html>
+

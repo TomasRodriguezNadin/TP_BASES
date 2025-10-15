@@ -1,10 +1,8 @@
 import express from "express";
 import { Client } from 'pg';
 import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "node:url";
-import { generarCertificadoPorFechaServidor, generarCertificadoPorLu} from './acciones/generacionCertificados.ts';
-import {actualizarTablaAlumnosJSON, buscarAlumnoPorLU} from "./acciones/accionesSQL.ts";
+import { pedirEscrituras} from './acciones/generacionCertificados.ts';
+import {actualizarTablasJSON} from "./acciones/accionesSQL.ts";
 import { warn } from "node:console";
 import { generarCRUD } from "./crud.ts";
 import session from 'express-session';
@@ -41,7 +39,7 @@ app.use(session({
     }
 }));
 
-function requireAuth(req: Request, res: Response, next: NextFunction) {
+export function requireAuth(req: Request, res: Response, next: NextFunction) {
     if (req.session.usuario) {
         next();
     } else {
@@ -93,11 +91,14 @@ app.post('/api/v0/auth/login', express.json(), async (req, res) => {
 });
 
 // API de logout
-/*
 app.post('/api/v0/auth/logout', (req, res) => {
-     ... 
+    req.session.destroy((err: any) => {
+        if (err) {
+            return res.status(500).json({ error: 'Error al cerrar sesión' });
+        }
+        return res.json({ success: true });
+    });
 });
-*/
 
 
 // API de registro
@@ -136,12 +137,15 @@ const HTML_MENU=
         <meta charset="utf8">
     </head>
     <body>
-        <h1>AIDA</h1>
+        <h1>Escribania</h1>
         <p>menu</p>
-        <p><a href="/app/lu">Imprimir certificado por LU</a></p>
-        <p><a href="/app/fecha">Imprimir certificado por fecha de trámite</a></p>
-        <p><a href="/app/archivo-json">Subir .csv con novedades de alumnos</a></p>
-        <p><a href="/app/alumnos">Ver tabla de alumnos</a></p>
+        <p><a href="/app/escritura">Solicitar escritura</a></p>
+        <p><a href="/app/escriturasEscribano">Solicitar escrituras por escribano</a></p>
+        <p><a href="/app/escriturasCliente">Solicitar escrituras por cliente</a></p>
+        <p><a href="/app/archivo-json">Subir .csv</a></p>
+        <p><a href="/app/escribanos">Ver tabla de escribanos</a></p>
+        <p><a href="/app/clientes">Ver tabla de clientes</a></p>
+        <p><a href="/app/tipoescrituras">Ver tabla de tipos de escrituras</a></p>
     </body>
 </html>
 `;
@@ -150,21 +154,21 @@ app.get('/app/menu', requireAuth, (_, res) => {
     res.send(HTML_MENU)
 })
 
-const HTML_LU=
+const HTML_PEDIR_ESCRITURA=
 `<!doctype html>
 <html>
     <head>
         <meta charset="utf8">
     </head>
     <body>
-        <div>Obtener el certificado de título en trámite</div>
-        <div><label>Libreta Universitaria: <input name=lu></label></div>
-        <button id="btnEnviar">Pedir Certificado</button>
+        <div>Obtener escritura</div>
+        #[labels]
+        <button id="btnEnviar">Pedir Escritura</button>
         <script>
             window.onload = function() {
                 document.getElementById("btnEnviar").onclick = function() {
-                    var lu = document.getElementsByName("lu")[0].value;
-                    window.location.href = "../api/v0/lu/" + encodeURIComponent(lu);
+                    #[vars]
+                    window.location.href = "../api/v0/escritura#[Caso]" #[uri] ;
                 }
             }
         </script>
@@ -172,35 +176,58 @@ const HTML_LU=
 </html>
 `;
 
-app.get('/app/lu', requireAuth, (_, res) => {
-    res.send(HTML_LU)
+function generarMenuEscrituras(parametros: Record<string, string>[], caso: string): string{
+    let html = HTML_PEDIR_ESCRITURA;
+    let labels = "";
+    let variables = "";
+    let uriComponents = "";
+
+    for (const parametro of parametros){
+        labels += `<div><label>${parametro.titulo}: <input name=${parametro.atributo}></label></div>`;
+        variables += `const ${parametro.atributo} = document.getElementsByName("${parametro.atributo}")[0].value;`;
+        uriComponents += `+ "/" + encodeURIComponent(${parametro.atributo})`; 
+    }
+
+    html = html.replace("#[labels]", labels);
+    html = html.replace("#[vars]", variables);
+    html = html.replace("#[uri]", uriComponents);
+    html = html.replace("#[Caso]", caso)
+
+    return html;
+}
+
+app.get('/app/escritura', requireAuth, (_, res) => {
+    const parametros = [
+        {titulo: "Matricula", atributo: "matricula"},
+        {titulo: "Numero de Protocolo", atributo: "nroProtocolo"},
+        {titulo: "Año", atributo: "anio"}
+    ];
+
+    const html = generarMenuEscrituras(parametros, "");
+    
+    res.send(html);
 })
 
-const HTML_FECHA=
-`<!doctype html>
-<html>
-    <head>
-        <meta charset="utf8">
-    </head>
-    <body>
-        <div>Obtener el certificado de título en trámite</div>
-        <div><label>Fecha del trámite: <input name=fecha type=date></label></div>
-        <button id="btnEnviar">Pedir Certificado</button>
-        <script>
-            window.onload = function() {
-                document.getElementById("btnEnviar").onclick = function() {
-                    var fecha = document.getElementsByName("fecha")[0].value;
-                    window.location.href = "../api/v0/fecha/" + encodeURIComponent(fecha);
-                }
-            }
-        </script>
-    </body>
-</html>
-`;
+app.get('/app/escriturasEscribano', requireAuth, (_, res) => {
+    const parametros = [
+        {titulo: "Matricula", atributo: "matricula"},
+    ];
 
-app.get('/app/fecha',requireAuth, (_, res) => {
-    res.send(HTML_FECHA)
+    const html = generarMenuEscrituras(parametros, "");
+    
+    res.send(html);
 })
+
+app.get('/app/escriturasCliente', requireAuth, (_, res) => {
+    const parametros = [
+        {titulo: "CUIT", atributo: "cuit"},
+    ];
+
+    const html = generarMenuEscrituras(parametros, "Cliente");
+    
+    res.send(html);
+})
+
 
 const HTML_ARCHIVO_JSON=
 `<!DOCTYPE html>
@@ -213,6 +240,17 @@ const HTML_ARCHIVO_JSON=
   <h2>Subir archivo CSV</h2>
   <input type="file" id="csvFile" accept=".csv" />
   <button onclick="handleUpload()">Procesar y Enviar</button>
+
+  <!-- Selector de opciones -->
+  <label for="opcion">Seleccioná una opción:</label>
+  <select id="opcion">
+    <option value="">-- Elegí una opción --</option>
+    <option value="1" label = "escribanos">Escribanos</option>
+    <option value="2" label = "clientes">Clientes</option>
+    <option value="3" label = "escrituras">Escrituras</option>
+  </select>
+
+  <br><br>
 
   <script>
     function parseCSV(text) {
@@ -230,23 +268,39 @@ const HTML_ARCHIVO_JSON=
     }
 
     async function handleUpload() {
+      console.log('Llamando handleUpload');
       const fileInput = document.getElementById('csvFile');
       const file = fileInput.files[0];
       if (!file) {
         alert('Por favor seleccioná un archivo CSV.');
         return;
       }
+        
+      const seleccionar = document.getElementById('opcion');
+      const opcionSeleccionada = seleccionar.options[seleccionar.selectedIndex];
+
+      const opcion = opcionSeleccionada.label;
+      if (opcion == 0) {
+        alert('Por favor seleccioná una opción antes de continuar.');
+        return;
+      }
 
       const text = await file.text();
       const jsonData = parseCSV(text);
 
+      const aEnviar = {
+        tabla: opcion,   
+        data: jsonData 
+      };
+
       try {
-        const response = await fetch('../api/v0/alumnos', {
+        console.log('Llamando al fetch');
+        const response = await fetch('../api/csv', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(jsonData)
+          body: JSON.stringify(aEnviar)
         });
 
         if (response.ok) {
@@ -269,39 +323,34 @@ app.get('/app/archivo-json', requireAuth, (_, res) => {
 })
 
 
-app.get('/app/alumnos', requireAuth, (_, res) => {
-    const fileName = fileURLToPath(import.meta.url);
-    const dirName = path.dirname(fileName);
-    res.sendFile(path.join(dirName, "alumnos.html"));
-})
-
-
 // API DEL BACKEND
 var NO_IMPLEMENTADO='<code>ERROR 404 </code> <h1> No implementado aún ⚒<h1>';
-const ERROR = '<code>ERROR 404 </code> <h1> error <h1>';
+export const ERROR = '<code>ERROR 404 </code> <h1> error <h1>';
 
 async function enviarHTML(parametro: string, cliente: Client, generador: Function, res){
     const html = await generador(cliente, parametro);
     res.send(html);
 }
 
-async function enviarHTMLLU(cliente: Client, req, res){
-    const parametro = req.params.lu;
-    await enviarHTML(parametro, cliente, generarCertificadoPorLu, res);
+async function enviarHTMLEscritura(cliente: Client, req, res){
+    const html = await pedirEscrituras(cliente, req.params);
+    res.send(html[0]);
 }
 
-async function enviarHTMLFecha(cliente: Client, req, res){
-    const parametro = req.params.fecha;
-    await enviarHTML(parametro, cliente, generarCertificadoPorFechaServidor, res);
+async function enviarHTMLEscrituras(cliente: Client, req, res){
+    const html = await pedirEscrituras(cliente, req.params);
+    res.send(html.join(`\n`));
 }
 
-async function cargarAlumnosJSON(cliente: Client, req, res){
-    const parametro = req.body;
-    await actualizarTablaAlumnosJSON(cliente, parametro);
-    console.log("Alumnos cargados correctamente");
+async function cargarJSON(cliente: Client, req, res){
+    const {tabla, data} = req.body;
+    console.log(tabla, data);
+
+    await actualizarTablasJSON(cliente, tabla, data);
+    console.log(tabla + " cargados correctamente");
 }
 
-export async function atenderPedido(respuesta: Function, mensajeError: string, req, res){
+async function atenderPedido(respuesta: Function, mensajeError: string, req, res){
     console.log(req.params, req.query, req.body);
     const clientDB = new Client();
     await clientDB.connect();
@@ -316,19 +365,23 @@ export async function atenderPedido(respuesta: Function, mensajeError: string, r
     }
 }
 
-app.get('/api/v0/lu/:lu', requireAuthAPI, async (req, res) => {
-    await atenderPedido(enviarHTMLLU, "No se pudo generar el certificado para el alumno", req, res);
+app.patch('/api/csv', requireAuthAPI, async (req, res) => {
+    await atenderPedido(cargarJSON, "No se pudieron cargar los datos a la tabla", req, res);
 })
 
-app.get('/api/v0/fecha/:fecha', requireAuthAPI, async (req, res) => {
-    await atenderPedido(enviarHTMLFecha, "No se pudieron generar los certificados", req, res)
+app.get('/api/v0/escritura/:matricula/:nroProtocolo/:anio', requireAuthAPI, async (req, res) => {
+    await atenderPedido(enviarHTMLEscritura, "No se pudo generar la escritura", req, res);
 })
 
-app.patch('/api/v0/alumnos', requireAuthAPI, async (req, res) => {
-    await atenderPedido(cargarAlumnosJSON, "No se pudieron cargar los alumnos a la tabla", req, res);
+app.get('/api/v0/escritura/:matricula', requireAuthAPI, async (req, res) => {
+    await atenderPedido(enviarHTMLEscrituras, "No se pudo generar la escritura", req, res);
 })
 
-await generarCRUD(app, "/api/alumnos");
+app.get('/api/v0/escrituraCliente/:cuit', requireAuthAPI, async (req, res) => {
+    await atenderPedido(enviarHTMLEscrituras, "No se pudo generar la escritura", req, res);
+})
+
+await generarCRUD(app);
 
 app.listen(port, () => {
     console.log(`Example app listening on port http://localhost:${port}/app/login`)
