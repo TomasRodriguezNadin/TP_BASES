@@ -1,5 +1,4 @@
 import { Client } from 'pg'; 
-import type {Alumno} from '../tipos.ts';
 
 type filtro = Record<string, string> | {all: boolean};
 
@@ -107,16 +106,8 @@ export async function buscarTabla(client: Client, tabla: string, filtro: filtro)
 
     console.log(instruccion);
 
-    const alumnos = await client.query(instruccion);
-    return alumnos.rows;
-}
-
-export async function buscarAlumnosPorFecha(client:Client, fecha: string) {
-    return await buscarTabla(client, "alumnos", {fecha: fecha});
-}
-
-export async function buscarAlumnoPorLU(client:Client, lu:string){
-    return await buscarTabla(client,"alumnos", {lu: lu});
+    const filas = await client.query(instruccion);
+    return filas.rows;
 }
 
 export async function buscarTodosEnTabla(client: Client, tabla: string){

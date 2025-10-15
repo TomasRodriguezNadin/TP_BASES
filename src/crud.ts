@@ -14,7 +14,6 @@ interface datosTabla {
 }
 
 const tables: datosTabla[] = [
-    {tabla: "alumnos", titulo: "Alumnos", ruta: "/api/alumnos"},
     {tabla: "escribanos", titulo: "escribanos", ruta: "/api/escribanos"},
     {tabla: "clientes", titulo: "clientes", ruta: "/api/clientes"},
     {tabla: "tipoescrituras", titulo: "Tipos de escrituras", ruta: "/api/tipoescrituras"}
@@ -60,7 +59,7 @@ function generarForm(atributos: string[]): string{
 async function generarHTML(datos: datosTabla): Promise<string>{
     const fileName = fileURLToPath(import.meta.url);
     const dirName = path.dirname(fileName);
-    const pathTemplate = path.join(dirName, "alumnos.html");
+    const pathTemplate = path.join(dirName, "template_tabla.html");
 
     let html = await readFile(pathTemplate, {encoding: 'utf8'});
     console.log("Encontramos el html");
@@ -101,7 +100,7 @@ async function atenderPedido(respuesta: Function, tabla: string, req, res){
     }
 }
 
-export async function generarCRUD(app: Express.Application, ruta: string){
+export async function generarCRUD(app: Express.Application){
     for (const datosTabla of tables){
 
         let rutaParametros = `${datosTabla.ruta}`;
