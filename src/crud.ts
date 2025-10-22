@@ -10,34 +10,16 @@ import { ERROR } from "./servidor.ts";
 interface datosTabla {
     tabla: string,
     titulo: string,
-    ruta: string
+    ruta: string,
+    registro: string
 }
 
 const tables: datosTabla[] = [
-    {tabla: "escribanos", titulo: "escribanos", ruta: "/api/escribanos"},
-    {tabla: "clientes", titulo: "clientes", ruta: "/api/clientes"},
-    {tabla: "tipoescrituras", titulo: "Tipos de escrituras", ruta: "/api/tipoescrituras"},
-    {tabla: "escrituras", titulo: "escrituras", ruta: "api/escrituras"}
+    {tabla: "escribanos", titulo: "Escribanos", ruta: "/api/escribanos", registro: "escribano"},
+    {tabla: "clientes", titulo: "Clientes", ruta: "/api/clientes", registro: "cliente"},
+    {tabla: "tipoescrituras", titulo: "Tipos de Escrituras", ruta: "/api/tipoescrituras", registro: "tipo de escritura"},
+    {tabla: "escrituras", titulo: "Escrituras", ruta: "api/escrituras", registro: "escritura"}
 ]
-
-const textosDeTablas = {
-  clientes: {
-    tituloLista: "Lista de clientes",
-    botonAgregar: "Agregar cliente"
-  },
-  escrituras: {
-    tituloLista: "Lista de escrituras",
-    botonAgregar: "Agregar escritura"
-  },
-  tipoescrituras: {
-    tituloLista: "Lista de tipos de escrituras",
-    botonAgregar: "Agregar tipo"
-  },
-  escribanos: {
-    tituloLista: "Lista de escribanos",
-    botonAgregar: "Agregar escribano"
-  }
-};
 
 async function obtenerFilas(cliente: Client, tabla: string, _, res){
     const filas = await buscarTodosEnTabla(cliente, tabla);
@@ -80,7 +62,11 @@ async function generarHTML(datos: datosTabla): Promise<string>{
     const fileName = fileURLToPath(import.meta.url);
     const dirName = path.dirname(fileName);
     const pathTemplate = path.join(dirName, "template_tabla.html");
-    const textos = textosDeTablas[datos.tabla];
+    const textos = {
+        tituloLista: `${datos.titulo}`,
+        entidad: `${datos.registro}`
+    };
+
 
     let html = await readFile(pathTemplate, {encoding: 'utf8'});
     for (const [clave, valor] of Object.entries(textos)) {
