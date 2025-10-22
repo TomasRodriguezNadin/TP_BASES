@@ -18,7 +18,7 @@ const tables: datosTabla[] = [
     {tabla: "escribanos", titulo: "Escribanos", ruta: "/api/escribanos", registro: "escribano"},
     {tabla: "clientes", titulo: "Clientes", ruta: "/api/clientes", registro: "cliente"},
     {tabla: "tipoescrituras", titulo: "Tipos de Escrituras", ruta: "/api/tipoescrituras", registro: "tipo de escritura"},
-    {tabla: "escrituras", titulo: "Escrituras", ruta: "api/escrituras", registro: "escritura"}
+    {tabla: "escrituras", titulo: "Escrituras", ruta: "/api/escrituras", registro: "escritura"}
 ]
 
 async function obtenerFilas(cliente: Client, tabla: string, _, res){
