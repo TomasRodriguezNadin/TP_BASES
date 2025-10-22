@@ -16,8 +16,28 @@ interface datosTabla {
 const tables: datosTabla[] = [
     {tabla: "escribanos", titulo: "escribanos", ruta: "/api/escribanos"},
     {tabla: "clientes", titulo: "clientes", ruta: "/api/clientes"},
-    {tabla: "tipoescrituras", titulo: "Tipos de escrituras", ruta: "/api/tipoescrituras"}
+    {tabla: "tipoescrituras", titulo: "Tipos de escrituras", ruta: "/api/tipoescrituras"},
+    {tabla: "escrituras", titulo: "escrituras", ruta: "api/escrituras"}
 ]
+
+const textosDeTablas = {
+  clientes: {
+    tituloLista: "Lista de clientes",
+    botonAgregar: "Agregar cliente"
+  },
+  escrituras: {
+    tituloLista: "Lista de escrituras",
+    botonAgregar: "Agregar escritura"
+  },
+  tipoescrituras: {
+    tituloLista: "Lista de tipos de escrituras",
+    botonAgregar: "Agregar tipo"
+  },
+  escribanos: {
+    tituloLista: "Lista de escribanos",
+    botonAgregar: "Agregar escribano"
+  }
+};
 
 async function obtenerFilas(cliente: Client, tabla: string, _, res){
     const filas = await buscarTodosEnTabla(cliente, tabla);
@@ -60,8 +80,12 @@ async function generarHTML(datos: datosTabla): Promise<string>{
     const fileName = fileURLToPath(import.meta.url);
     const dirName = path.dirname(fileName);
     const pathTemplate = path.join(dirName, "template_tabla.html");
+    const textos = textosDeTablas[datos.tabla];
 
     let html = await readFile(pathTemplate, {encoding: 'utf8'});
+    for (const [clave, valor] of Object.entries(textos)) {
+        html = html.replaceAll(`{{${clave}}}`, valor);
+    }
     console.log("Encontramos el html");
 
     const cliente = new Client();

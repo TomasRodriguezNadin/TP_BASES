@@ -146,6 +146,7 @@ const HTML_MENU=
         <p><a href="/app/escribanos">Ver tabla de escribanos</a></p>
         <p><a href="/app/clientes">Ver tabla de clientes</a></p>
         <p><a href="/app/tipoescrituras">Ver tabla de tipos de escrituras</a></p>
+        <p><a href="/app/escrituras">Ver tabla de escrituras</a></p>
     </body>
 </html>
 `;
