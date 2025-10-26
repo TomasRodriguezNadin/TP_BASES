@@ -17,7 +17,7 @@ interface datosTabla {
 const tables: datosTabla[] = [
     {tabla: "escribanos", titulo: "Escribanos", ruta: "/api/escribanos", registro: "escribano"},
     {tabla: "clientes", titulo: "Clientes", ruta: "/api/clientes", registro: "cliente"},
-    {tabla: "tipo_escrituras", titulo: "Tipos de Escrituras", ruta: "/api/tipoe_scrituras", registro: "tipo de escritura"},
+    {tabla: "tipo_escrituras", titulo: "Tipos de Escrituras", ruta: "/api/tipo_escrituras", registro: "tipo de escritura"},
     {tabla: "escrituras", titulo: "Escrituras", ruta: "/api/escrituras", registro: "escritura"}
 ]
 
@@ -47,14 +47,14 @@ async function editarFila(cliente: Client, tabla: string, req, res){
 
 function generarTable(atributos: string[]): string{
     return atributos.map((atributo: string) => 
-                                `<th>${atributo} <button onclick="ordenarPor('${atributo}')">↓</button></th>`)
+                                `<th>${atributo.replace("_", " ")} <button onclick="ordenarPor('${atributo}')">↓</button></th>`)
                                 .join(`\n`);
 
 }
 
 function generarForm(atributos: string[]): string{
     return atributos.map((atributo: string) => 
-                                `<input id="${atributo}" placeholder="${atributo}" required />`)
+                                `<input id="${atributo}" placeholder="${atributo.replace("_", " ")}" required />`)
                                 .join(`\n`);
 }
 
@@ -85,7 +85,6 @@ async function generarHTML(datos: datosTabla): Promise<string>{
     html = html.replace(`#[Attr]`, JSON.stringify(atributos));
     html = html.replace("#[PK]", JSON.stringify(clavePrimaria));
 
-    atributos = atributos.map(str => str.replace("_", " "));
     const table = generarTable(atributos);
     html = html.replace("#[Table]", table);
 

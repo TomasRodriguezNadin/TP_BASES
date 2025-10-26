@@ -35,9 +35,9 @@ CREATE TABLE TP.escrituras (
     anio INT,
     idTipo INT,
     cuit BIGINT,
-    PRIMARY KEY (matricula, nroProtocolo, anio),
+    PRIMARY KEY (matricula, nro_protocolo, anio),
     FOREIGN KEY (matricula) REFERENCES TP.escribanos(matricula),
-    FOREIGN KEY (idTipo) REFERENCES TP.tipoEscrituras(idTipo),
+    FOREIGN KEY (id_tipo) REFERENCES TP.tipoEscrituras(id_tipo),
     FOREIGN KEY (cuit) REFERENCES TP.clientes(cuit)
 );
 
