@@ -6,7 +6,7 @@ CREATE TYPE experiencia AS ENUM ('principiante', 'mediano', 'experimentado');
 
 CREATE TABLE TP.escribanos (
     matricula INT PRIMARY KEY,
-    nombre TEXT NOT NULL,
+    nombre_escribano TEXT NOT NULL,
     apellido TEXT NOT NULL,
     capacidad experiencia NOT NULL
 );
@@ -21,17 +21,17 @@ CREATE TABLE TP.clientes (
 
 grant SELECT, INSERT, UPDATE, DELETE on TP.clientes to administrador;
 
-CREATE TABLE TP.tipoEscrituras (
-    idTipo INT PRIMARY KEY,
+CREATE TABLE TP.tipo_escrituras (
+    id_tipo INT PRIMARY KEY,
     tipo TEXT,
-    experienciaRequerida experiencia NOT NULL
+    experiencia_requerida experiencia NOT NULL
 );
 
 grant SELECT, INSERT, UPDATE, DELETE on TP.tipoEscrituras to administrador;
 
 CREATE TABLE TP.escrituras (
     matricula INT,
-    nroProtocolo INT,
+    nro_protocolo INT,
     anio INT,
     idTipo INT,
     cuit BIGINT,

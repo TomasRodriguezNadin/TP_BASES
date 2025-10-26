@@ -17,7 +17,7 @@ interface datosTabla {
 const tables: datosTabla[] = [
     {tabla: "escribanos", titulo: "Escribanos", ruta: "/api/escribanos", registro: "escribano"},
     {tabla: "clientes", titulo: "Clientes", ruta: "/api/clientes", registro: "cliente"},
-    {tabla: "tipoescrituras", titulo: "Tipos de Escrituras", ruta: "/api/tipoescrituras", registro: "tipo de escritura"},
+    {tabla: "tipo_escrituras", titulo: "Tipos de Escrituras", ruta: "/api/tipoe_scrituras", registro: "tipo de escritura"},
     {tabla: "escrituras", titulo: "Escrituras", ruta: "/api/escrituras", registro: "escritura"}
 ]
 
@@ -77,7 +77,7 @@ async function generarHTML(datos: datosTabla): Promise<string>{
     const cliente = new Client();
     await cliente.connect();
 
-    const atributos = await obtenerAtributosTabla(cliente, datos.tabla);
+    let atributos = await obtenerAtributosTabla(cliente, datos.tabla);
 
     const clavePrimaria = await obtenerClavePrimariaTabla(cliente, datos.tabla);
     cliente.end();
@@ -85,6 +85,7 @@ async function generarHTML(datos: datosTabla): Promise<string>{
     html = html.replace(`#[Attr]`, JSON.stringify(atributos));
     html = html.replace("#[PK]", JSON.stringify(clavePrimaria));
 
+    atributos = atributos.map(str => str.replace("_", " "));
     const table = generarTable(atributos);
     html = html.replace("#[Table]", table);
 

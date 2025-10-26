@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Certificado de Título en Trámite</title>
+    <title>Escritura</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@300;400&display=swap');
 
@@ -18,7 +18,7 @@
             min-height: 100vh;
         }
 
-        .certificate-container {
+        .escritura-container {
             width: 210mm;
             min-height: 297mm;
             background-color: white;
@@ -38,12 +38,12 @@
             pointer-events: none;
         }
 
-        .university-header {
+        .escribania-header {
             text-align: center;
             margin-bottom: 30px;
         }
 
-        .university-name {
+        .escribania-name {
             font-family: 'Playfair Display', serif;
             font-size: 28px;
             font-weight: 700;
@@ -51,13 +51,13 @@
             margin-bottom: 5px;
         }
 
-        .university-subtitle {
+        .escribania-subtitle {
             font-size: 16px;
             color: #7f8c8d;
             margin-bottom: 20px;
         }
 
-        .certificate-title {
+        .escritura-title {
             text-align: center;
             font-family: 'Playfair Display', serif;
             font-size: 32px;
@@ -67,13 +67,13 @@
             letter-spacing: 3px;
         }
 
-        .certificate-body {
+        .escritura-body {
             margin: 40px 0;
             line-height: 1.8;
             font-size: 18px;
         }
 
-        .student-data {
+        .cliente-data {
             margin: 30px 0;
         }
 
@@ -108,7 +108,7 @@
             color: #7f8c8d;
         }
 
-        .certificate-footer {
+        .escritura-footer {
             text-align: center;
             margin-top: 50px;
             font-size: 14px;
@@ -130,7 +130,7 @@
                 padding: 0;
             }
 
-            .certificate-container {
+            .escritura-container {
                 box-shadow: none;
                 width: 100%;
                 height: 100%;
@@ -139,20 +139,20 @@
     </style>
 </head>
 <body>
-    <div class="certificate-container">
+    <div class="escritura-container">
         <div class="border-design"></div>
 
-        <div class="university-header">
-            <div class="university-name">ESCRIBANIA</div>
-            <div class="university-subtitle">Con ayuda de Tomi, Antu y Damy</div>
+        <div class="escribania-header">
+            <div class="escribania-name">ESCRIBANIA</div>
+            <div class="escribania-subtitle">Con ayuda de Tomi, Antu y Damy</div>
         </div>
 
-        <div class="certificate-title">Escritura de la casa</div>
+        <div class="escritura-title">Escritura de [#tipodeescritura]</div>
 
-        <div class="certificate-body">
+        <div class="escritura-body">
             <p>El/La abajo firmante, certifica que:</p>
 
-            <div class="student-data">
+            <div class="cliente-data">
                 <div class="data-field">
                     <span class="data-label">Nombre y apellido:</span>
                     <span>aUnirTablas</span>
@@ -170,26 +170,31 @@
                     <span>[#anio]</span>
                 </div>
             </div>
-
-            <p>Ha logrado adquirir un inmueble.</p>
-
-            <p>Se extiende la presente escritura.</p>
-        </div>
-
-        <div class="signature-area">
-            <div class="signature-box">
-                <div class="signature-line"></div>
-                <div class="signature-label">Firma del cliente</div>
+            <div class="data-field">
+                <span class="data-label">Número de matrícula:</span>
+                <span>[#nromatricula]</span>
+            </div>
+            <div class="data-field">
+                <span class="data-label">Nombre del escribano:</span>
+                <span>[#nombreescribano]</span>
+            </div>
+                    <p>Se extiende la presente escritura.</p>
             </div>
 
-            <div class="signature-box">
-                <div class="signature-line"></div>
-                <div class="signature-label">Firma y Sello del Escribano</div>
-            </div>
-        </div>
+            <div class="signature-area">
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <div class="signature-label">Firma del cliente</div>
+                </div>
 
-        <div class="certificate-footer">
-            <p>Certificado emitido electrónamente - Para verificar la autenticidad contactar con escribania@gmoil.arg</p>
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <div class="signature-label">Firma y Sello del Escribano</div>
+                </div>
+            </div>
+
+        <div class="escritura-footer">
+            <p>Certificado emitido electrónamente - Para verificar la autenticidad contactar con escribania@gmail.arg</p>
         </div>
 
         <div class="seal">SELLO</div>
