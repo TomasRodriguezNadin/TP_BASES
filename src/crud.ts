@@ -6,6 +6,7 @@ import path from "path";
 import { fileURLToPath } from "node:url";
 import {readFile} from 'node:fs/promises';
 import { ERROR } from "./servidor.ts";
+import { crearCliente } from "./acciones/coneccion.ts";
 
 interface datosTabla {
     tabla: string,
@@ -73,9 +74,7 @@ async function generarHTML(datos: datosTabla): Promise<string>{
         html = html.replaceAll(`{{${clave}}}`, valor);
     }
     console.log("Encontramos el html");
-
-    const cliente = new Client();
-    await cliente.connect();
+    const cliente = await crearCliente();
 
     let atributos = await obtenerAtributosTabla(cliente, datos.tabla);
 
@@ -97,8 +96,7 @@ async function generarHTML(datos: datosTabla): Promise<string>{
 
 async function atenderPedido(respuesta: Function, tabla: string, req, res){
     console.log(req.params, req.query, req.body);
-    const clientDB = new Client();
-    await clientDB.connect();
+    const clientDB = await crearCliente();
 
     try{
         await respuesta(clientDB, tabla, req, res);
@@ -114,8 +112,7 @@ export async function generarCRUD(app: Express.Application){
     for (const datosTabla of tables){
 
         let rutaParametros = `${datosTabla.ruta}`;
-        const client = new Client();
-        await client.connect();
+        const client = await crearCliente();
 
         const clavePrimaria = await obtenerClavePrimariaTabla(client, datosTabla.tabla);
         for (const clave of clavePrimaria){

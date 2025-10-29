@@ -10,7 +10,7 @@ CREATE TYPE estado AS ENUM ('contratado', 'no contratado');
 CREATE TABLE TP.escribanos (
     matricula INT PRIMARY KEY,
     nombre_escribano TEXT NOT NULL,
-    apellido TEXT NOT NULL,
+    apellido_escribano TEXT NOT NULL,
     capacidad experiencia NOT NULL,
     estado estado DEFAULT 'contratado'
 );

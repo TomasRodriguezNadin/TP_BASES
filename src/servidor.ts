@@ -11,6 +11,7 @@ import { autenticarUsuario, crearUsuario } from './auth.ts';
 import type { Usuario } from "./auth.ts";
 import type { Request, Response, NextFunction } from "express"; 
 import * as fs from 'fs';
+import { crearCliente } from "./acciones/coneccion.ts";
 
 dotenv.config({ debug: true, path: "./.env" }); // así activás el logeo
 
@@ -67,8 +68,7 @@ app.get('/app/login', (req, res) => {
 
 // API de login
 app.post('/api/v0/auth/login', express.json(), async (req, res) => {
-    const cliente = new Client();
-    await cliente.connect();
+    const cliente = await crearCliente();
 
     const username = req.body.username;
     const password = req.body.password;
@@ -103,8 +103,7 @@ app.post('/api/v0/auth/logout', (req, res) => {
 
 // API de registro
 app.post('/api/v0/auth/register', express.json(), async (req, res) => {
-    const cliente = new Client();
-    await cliente.connect();
+    const cliente = await crearCliente();
 
     const parametros = req.body;
     console.log(parametros);
@@ -353,8 +352,7 @@ async function cargarJSON(cliente: Client, req, res){
 
 async function atenderPedido(respuesta: Function, mensajeError: string, req, res){
     console.log(req.params, req.query, req.body);
-    const clientDB = new Client();
-    await clientDB.connect();
+    const clientDB = await crearCliente();
 
     try{
         await respuesta(clientDB, req, res);
