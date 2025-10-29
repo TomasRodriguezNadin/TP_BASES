@@ -55,7 +55,7 @@ export async function cargarATablaDesdeCsv(cliente:Client, tabla: string, path:s
 }
 
 export async function pedirEscrituras(cliente: Client, filtro: Record<string, string>): Promise<string[]>{
-    const escrituras = await buscarTabla(cliente, "escrituras", filtro);
+    const escrituras = await buscarTabla(cliente, "datos_escritura", filtro);
     let htmls: string[] = [];
     for (const escritura of escrituras){
         const html = await generarEscritura(escritura);

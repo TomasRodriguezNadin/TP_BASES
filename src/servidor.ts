@@ -370,7 +370,7 @@ app.patch('/api/csv', requireAuthAPI, async (req, res) => {
     await atenderPedido(cargarJSON, "No se pudieron cargar los datos a la tabla", req, res);
 })
 
-app.get('/api/v0/escritura/:matricula/:nroProtocolo/:anio', requireAuthAPI, async (req, res) => {
+app.get('/api/v0/escritura/:matricula/:nro_Protocolo/:anio', requireAuthAPI, async (req, res) => {
     await atenderPedido(enviarHTMLEscritura, "No se pudo generar la escritura", req, res);
 })
 
