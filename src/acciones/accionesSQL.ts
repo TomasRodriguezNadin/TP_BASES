@@ -57,6 +57,7 @@ export async function actualizarTabla(client:Client, tabla: string, lista:string
         const datos = linea.split(',').map(value => value.trim());
         const instruccion = `INSERT INTO TP.${tabla} (${columnas.join(', ')}) VALUES
                             (${datos.map((dato) => dato === '' ? 'null' : sqlLiteral(dato) ).join(',')})`;
+        console.log(instruccion);
         await client.query(instruccion);
     }
 }
@@ -115,7 +116,7 @@ export async function buscarTodosEnTabla(client: Client, tabla: string){
 }
 
 export async function buscarDatosDeEscritura(client: Client, matricula: string, nroProtocolo: string, anio: string){
-    return await buscarTabla(client, "escrituras", {matricula:matricula, nroprotocolo:nroProtocolo, anio:anio});
+    return await buscarTabla(client, "escrituras", {matricula:matricula, nro_protocolo:nroProtocolo, anio:anio});
 }
 
 export async function buscarEscribanoPorMatricula(client: Client, matricula: string){
@@ -123,5 +124,5 @@ export async function buscarEscribanoPorMatricula(client: Client, matricula: str
 }
 
 export async function buscarTipoPorID(client: Client, idTipo: string){
-    return await buscarTabla(client, "tipoescrituras", {idTipo: idTipo});
+    return await buscarTabla(client, "tipo_escrituras", {id_Tipo: idTipo});
 }
