@@ -30,3 +30,32 @@ CREATE TRIGGER verificar_escribano_contratado
 BEFORE INSERT OR UPDATE ON TP.escrituras
 FOR EACH ROW
 EXECUTE FUNCTION TP.verificar_escribano_contratado();
+
+CREATE OR REPLACE FUNCTION tp.eliminar_escribanos_no_contratados()
+RETURNS TRIGGER AS $$
+BEGIN
+    DELETE FROM tp.escribanos
+    WHERE matricula NOT IN (
+        SELECT matricula
+        FROM tp.escribanos 
+        WHERE estado = 'contratado'
+        UNION 
+        (
+            SELECT DISTINCT e.matricula
+            FROM tp.escribanos e
+            INNER JOIN tp.escrituras et ON et.matricula = e.matricula
+        )
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER eliminar_escribanos_no_contratados_despues_de_borrar_escrituras
+AFTER DELETE ON tp.escrituras
+FOR EACH STATEMENT
+EXECUTE FUNCTION tp.eliminar_escribanos_no_contratados();
+
+CREATE OR REPLACE TRIGGER eliminar_escribanos_no_contratados_despues_de_insertar_escribanos
+AFTER INSERT OR UPDATE ON tp.escribanos
+FOR EACH STATEMENT
+EXECUTE FUNCTION tp.eliminar_escribanos_no_contratados();
