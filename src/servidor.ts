@@ -11,6 +11,7 @@ import { autenticarUsuario, crearUsuario } from './auth.ts';
 import type { Usuario } from "./auth.ts";
 import type { Request, Response, NextFunction } from "express"; 
 import * as fs from 'fs';
+import { crearCliente } from "./acciones/coneccion.ts";
 
 dotenv.config({ debug: true, path: "./.env" }); // así activás el logeo
 
@@ -67,8 +68,7 @@ app.get('/app/login', (req, res) => {
 
 // API de login
 app.post('/api/v0/auth/login', express.json(), async (req, res) => {
-    const cliente = new Client();
-    await cliente.connect();
+    const cliente = await crearCliente();
 
     const username = req.body.username;
     const password = req.body.password;
@@ -103,8 +103,7 @@ app.post('/api/v0/auth/logout', (req, res) => {
 
 // API de registro
 app.post('/api/v0/auth/register', express.json(), async (req, res) => {
-    const cliente = new Client();
-    await cliente.connect();
+    const cliente = await crearCliente();
 
     const parametros = req.body;
     console.log(parametros);
@@ -145,7 +144,7 @@ const HTML_MENU=
         <p><a href="/app/archivo-json">Subir .csv</a></p>
         <p><a href="/app/escribanos">Ver tabla de escribanos</a></p>
         <p><a href="/app/clientes">Ver tabla de clientes</a></p>
-        <p><a href="/app/tipoescrituras">Ver tabla de tipos de escrituras</a></p>
+        <p><a href="/app/tipo_escrituras">Ver tabla de tipos de escrituras</a></p>
         <p><a href="/app/escrituras">Ver tabla de escrituras</a></p>
     </body>
 </html>
@@ -353,8 +352,7 @@ async function cargarJSON(cliente: Client, req, res){
 
 async function atenderPedido(respuesta: Function, mensajeError: string, req, res){
     console.log(req.params, req.query, req.body);
-    const clientDB = new Client();
-    await clientDB.connect();
+    const clientDB = await crearCliente();
 
     try{
         await respuesta(clientDB, req, res);
@@ -370,7 +368,7 @@ app.patch('/api/csv', requireAuthAPI, async (req, res) => {
     await atenderPedido(cargarJSON, "No se pudieron cargar los datos a la tabla", req, res);
 })
 
-app.get('/api/v0/escritura/:matricula/:nroProtocolo/:anio', requireAuthAPI, async (req, res) => {
+app.get('/api/v0/escritura/:matricula/:nro_Protocolo/:anio', requireAuthAPI, async (req, res) => {
     await atenderPedido(enviarHTMLEscritura, "No se pudo generar la escritura", req, res);
 })
 

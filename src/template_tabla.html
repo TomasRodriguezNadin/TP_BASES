@@ -118,7 +118,7 @@
       let fila = {};
 
       for (const atr of atributos){
-        fila[atr] = document.getElementById(`${atr}`).value
+        fila[atr[0]] = document.getElementById(`${atr[0]}`).value
       }
       await fetch(API_URL, {
         method: 'POST',

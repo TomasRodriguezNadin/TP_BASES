@@ -1,11 +1,12 @@
 import * as Express from "express";
 import { Client } from 'pg';
-import { actualizarTablasJSON, borrarFilaDeLaTabla, buscarTodosEnTabla, editarFilaDeTabla, obtenerAtributosTabla, obtenerClavePrimariaTabla} from "./acciones/accionesSQL.ts";
+import { actualizarTablasJSON, borrarFilaDeLaTabla, buscarTodosEnTabla, editarFilaDeTabla, obtenerAtributosTabla, obtenerClavePrimariaTabla, obtenerEnums, obtenerTipoDe} from "./acciones/accionesSQL.ts";
 import { requireAuthAPI, requireAuth } from "./servidor.ts";
 import path from "path";
 import { fileURLToPath } from "node:url";
 import {readFile} from 'node:fs/promises';
 import { ERROR } from "./servidor.ts";
+import { crearCliente } from "./acciones/coneccion.ts";
 
 interface datosTabla {
     tabla: string,
@@ -17,7 +18,7 @@ interface datosTabla {
 const tables: datosTabla[] = [
     {tabla: "escribanos", titulo: "Escribanos", ruta: "/api/escribanos", registro: "escribano"},
     {tabla: "clientes", titulo: "Clientes", ruta: "/api/clientes", registro: "cliente"},
-    {tabla: "tipoescrituras", titulo: "Tipos de Escrituras", ruta: "/api/tipoescrituras", registro: "tipo de escritura"},
+    {tabla: "tipo_escrituras", titulo: "Tipos de Escrituras", ruta: "/api/tipo_escrituras", registro: "tipo de escritura"},
     {tabla: "escrituras", titulo: "Escrituras", ruta: "/api/escrituras", registro: "escritura"}
 ]
 
@@ -47,15 +48,39 @@ async function editarFila(cliente: Client, tabla: string, req, res){
 
 function generarTable(atributos: string[]): string{
     return atributos.map((atributo: string) => 
-                                `<th>${atributo} <button onclick="ordenarPor('${atributo}')">↓</button></th>`)
+                                `<th>${atributo.replace("_", " ")} <button onclick="ordenarPor('${atributo}')">↓</button></th>`)
                                 .join(`\n`);
 
 }
 
-function generarForm(atributos: string[]): string{
-    return atributos.map((atributo: string) => 
-                                `<input id="${atributo}" placeholder="${atributo}" required />`)
-                                .join(`\n`);
+
+async function generarForm(cliente: Client, atributos: string[][], tabla: string): Promise<string>{
+
+    const res = await Promise.all(atributos.map(async (atributo: string[]) =>{ 
+
+        if(atributo[1] == 'USER-DEFINED'){
+            console.log(await obtenerTipoDe(cliente, tabla, atributo[0]));
+            let enums = await obtenerEnums(cliente, await obtenerTipoDe(cliente, tabla, atributo[0]));
+            
+            const opcionesHTML = enums
+          .map(valor => `<option value="${valor}">${valor}</option>`)
+          .join('\n');
+
+        return `
+          <label for="${atributo[0]}">${atributo[0].replace("_", " ")}:</label>
+          <select id="${atributo[0]}" name="${atributo[0]}" required>
+            <option value="">Seleccione una opción</option>
+            ${opcionesHTML}
+          </select>
+        `;
+        }
+
+        return `<input id="${atributo[0]}" placeholder="${atributo[0].replace("_", " ")}" required />`;
+        
+    })); 
+    
+    return res.join('\n');
+        
 }
 
 async function generarHTML(datos: datosTabla): Promise<string>{
@@ -73,23 +98,24 @@ async function generarHTML(datos: datosTabla): Promise<string>{
         html = html.replaceAll(`{{${clave}}}`, valor);
     }
     console.log("Encontramos el html");
+    const cliente = await crearCliente();
 
-    const cliente = new Client();
-    await cliente.connect();
-
-    const atributos = await obtenerAtributosTabla(cliente, datos.tabla);
+    let atributos = await obtenerAtributosTabla(cliente, datos.tabla);
 
     const clavePrimaria = await obtenerClavePrimariaTabla(cliente, datos.tabla);
-    cliente.end();
+    
 
     html = html.replace(`#[Attr]`, JSON.stringify(atributos));
     html = html.replace("#[PK]", JSON.stringify(clavePrimaria));
 
-    const table = generarTable(atributos);
+    const table = generarTable(atributos.map(elem => elem[0]));
     html = html.replace("#[Table]", table);
 
-    const form = generarForm(atributos);
+    const form = await generarForm(cliente, atributos, datos.tabla);
+
     html = html.replace(`#[Form]`, form);
+
+    cliente.end();
 
     html = html.replace(`#[Ruta]`, `"${datos.ruta}"`);
     return html;
@@ -97,8 +123,7 @@ async function generarHTML(datos: datosTabla): Promise<string>{
 
 async function atenderPedido(respuesta: Function, tabla: string, req, res){
     console.log(req.params, req.query, req.body);
-    const clientDB = new Client();
-    await clientDB.connect();
+    const clientDB = await crearCliente();
 
     try{
         await respuesta(clientDB, tabla, req, res);
@@ -114,8 +139,7 @@ export async function generarCRUD(app: Express.Application){
     for (const datosTabla of tables){
 
         let rutaParametros = `${datosTabla.ruta}`;
-        const client = new Client();
-        await client.connect();
+        const client = await crearCliente();
 
         const clavePrimaria = await obtenerClavePrimariaTabla(client, datosTabla.tabla);
         for (const clave of clavePrimaria){

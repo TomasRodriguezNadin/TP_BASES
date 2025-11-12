@@ -4,11 +4,15 @@ GRANT USAGE ON SCHEMA TP TO administrador;
 
 CREATE TYPE experiencia AS ENUM ('principiante', 'mediano', 'experimentado');
 
+CREATE TYPE estado AS ENUM ('contratado', 'no contratado');
+
+
 CREATE TABLE TP.escribanos (
     matricula INT PRIMARY KEY,
-    nombre TEXT NOT NULL,
-    apellido TEXT NOT NULL,
-    capacidad experiencia NOT NULL
+    nombre_escribano TEXT NOT NULL,
+    apellido_escribano TEXT NOT NULL,
+    capacidad experiencia NOT NULL,
+    estado estado DEFAULT 'contratado'
 );
 
 grant SELECT, INSERT, UPDATE, DELETE on TP.escribanos to administrador;
@@ -21,23 +25,23 @@ CREATE TABLE TP.clientes (
 
 grant SELECT, INSERT, UPDATE, DELETE on TP.clientes to administrador;
 
-CREATE TABLE TP.tipoEscrituras (
-    idTipo INT PRIMARY KEY,
+CREATE TABLE TP.tipo_escrituras (
+    id_tipo INT PRIMARY KEY,
     tipo TEXT,
-    experienciaRequerida experiencia NOT NULL
+    experiencia_requerida experiencia NOT NULL
 );
 
-grant SELECT, INSERT, UPDATE, DELETE on TP.tipoEscrituras to administrador;
+grant SELECT, INSERT, UPDATE, DELETE on TP.tipo_escrituras to administrador;
 
 CREATE TABLE TP.escrituras (
     matricula INT,
-    nroProtocolo INT,
+    nro_protocolo INT,
     anio INT,
-    idTipo INT,
+    id_tipo INT,
     cuit BIGINT,
-    PRIMARY KEY (matricula, nroProtocolo, anio),
+    PRIMARY KEY (matricula, nro_protocolo, anio),
     FOREIGN KEY (matricula) REFERENCES TP.escribanos(matricula),
-    FOREIGN KEY (idTipo) REFERENCES TP.tipoEscrituras(idTipo),
+    FOREIGN KEY (id_tipo) REFERENCES TP.tipo_escrituras(id_tipo),
     FOREIGN KEY (cuit) REFERENCES TP.clientes(cuit)
 );
 

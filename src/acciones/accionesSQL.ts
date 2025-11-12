@@ -13,13 +13,37 @@ function sqlLiteral(literal:string|number|null): string{
 
     return res;
 }
+export async function obtenerEnums(client:Client, tipo:string): Promise<string[]>{
+    const consultarEnums = `SELECT enumlabel
+                    FROM pg_enum
+                    JOIN pg_type ON pg_enum.enumtypid = pg_type.oid
+                    WHERE pg_type.typname = ${sqlLiteral(tipo)};`;
+    
+    const res = await client.query(consultarEnums);
+    
+    return res.rows.map(row => row.enumlabel);
+}
 
-export async function obtenerAtributosTabla(client: Client, tabla: string): Promise<string[]>{
-    const consultaAtributos = `SELECT column_name
+export async function obtenerTipoDe(client:Client, tabla:string, Nombrecolumna:string): Promise<string>{
+    const consultarEnums = `SELECT
+                c.column_name,
+                t.typname AS real_data_type
+                FROM information_schema.columns c
+                JOIN pg_type t ON t.oid = c.udt_name::regtype::oid
+                WHERE c.table_name = ${sqlLiteral(tabla)} AND c.column_name = ${sqlLiteral(Nombrecolumna)} ;`;
+    
+    const res = await client.query(consultarEnums);
+    
+
+    return res.rows[0].real_data_type;
+}
+
+export async function obtenerAtributosTabla(client: Client, tabla: string): Promise<string[][]>{
+    const consultaAtributos = `SELECT column_name, data_type
                     FROM information_schema.columns
                     WHERE table_name = '${tabla}'`;
     const res = await client.query(consultaAtributos);
-    return res.rows.map(obj => Object.values(obj)[0]);;
+    return res.rows.map(col => [col.column_name, col.data_type]);
 }
 
 export async function obtenerClavePrimariaTabla(client: Client, tabla: string): Promise<string[]>{
@@ -30,7 +54,7 @@ export async function obtenerClavePrimariaTabla(client: Client, tabla: string): 
                                 WHERE i.indrelid = 'TP.${tabla}'::regclass
                                 AND i.indisprimary;`
     const res = await client.query(consultaPrimaryKey);
-    return res.rows.map(obj => Object.values(obj)[0]);;
+    return res.rows.map(obj => Object.values(obj)[0]);
 }
 
 export async function editarFilaDeTabla(client: Client, tabla: string, fila: Record<string, string>){
@@ -57,6 +81,7 @@ export async function actualizarTabla(client:Client, tabla: string, lista:string
         const datos = linea.split(',').map(value => value.trim());
         const instruccion = `INSERT INTO TP.${tabla} (${columnas.join(', ')}) VALUES
                             (${datos.map((dato) => dato === '' ? 'null' : sqlLiteral(dato) ).join(',')})`;
+        console.log(instruccion);
         await client.query(instruccion);
     }
 }
@@ -115,7 +140,7 @@ export async function buscarTodosEnTabla(client: Client, tabla: string){
 }
 
 export async function buscarDatosDeEscritura(client: Client, matricula: string, nroProtocolo: string, anio: string){
-    return await buscarTabla(client, "escrituras", {matricula:matricula, nroprotocolo:nroProtocolo, anio:anio});
+    return await buscarTabla(client, "escrituras", {matricula:matricula, nro_protocolo:nroProtocolo, anio:anio});
 }
 
 export async function buscarEscribanoPorMatricula(client: Client, matricula: string){
@@ -123,5 +148,5 @@ export async function buscarEscribanoPorMatricula(client: Client, matricula: str
 }
 
 export async function buscarTipoPorID(client: Client, idTipo: string){
-    return await buscarTabla(client, "tipoescrituras", {idTipo: idTipo});
+    return await buscarTabla(client, "tipo_escrituras", {id_Tipo: idTipo});
 }

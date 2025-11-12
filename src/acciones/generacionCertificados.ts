@@ -19,13 +19,16 @@ async function tieneExperienciaRequerida(cliente: Client, matricula: string, idT
     if(resRequerida.length == 0) throw new Error(`No hay nigun tipo de escritura de id ${idTipo}`);
 
     const experienciaEscribano = resEscribano[0].capacidad;
-    const experienciaRequerida = resRequerida[0].experienciarequerida;
+    console.log(experienciaEscribano);
+    const experienciaRequerida = resRequerida[0].experiencia_requerida;
+    console.log(experienciaRequerida);
+    console.log(Experiencia[experienciaRequerida] <= Experiencia[experienciaEscribano]);
     return Experiencia[experienciaRequerida] <= Experiencia[experienciaEscribano];
 }
 
 async function filtrarEscrituras(cliente: Client, escrituras: string[], categorias: string[]): Promise<string[]>{
     const indiceMatricula = categorias.indexOf("matricula");
-    const indiceTipo = categorias.indexOf("idTipo");
+    const indiceTipo = categorias.indexOf("id_Tipo");
 
     let listaFiltrada: string[] = [];
 
@@ -33,7 +36,9 @@ async function filtrarEscrituras(cliente: Client, escrituras: string[], categori
         const elementos = linea.split(",");
         const matricula = elementos[indiceMatricula];
         const idTipo = elementos[indiceTipo];
+        console.log(linea);
         if(await tieneExperienciaRequerida(cliente, matricula, idTipo)){
+            console.log(linea);
             listaFiltrada.push(linea);
         }
     }
@@ -50,7 +55,7 @@ export async function cargarATablaDesdeCsv(cliente:Client, tabla: string, path:s
 }
 
 export async function pedirEscrituras(cliente: Client, filtro: Record<string, string>): Promise<string[]>{
-    const escrituras = await buscarTabla(cliente, "escrituras", filtro);
+    const escrituras = await buscarTabla(cliente, "datos_escritura", filtro);
     let htmls: string[] = [];
     for (const escritura of escrituras){
         const html = await generarEscritura(escritura);

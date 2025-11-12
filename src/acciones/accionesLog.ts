@@ -3,6 +3,7 @@ import {writeFile, appendFile} from 'node:fs/promises';
 import { buscarDatosDeEscritura} from './accionesSQL.ts';
 import { path_salida, archivo_log} from '../constantes.ts'
 import {cargarATablaDesdeCsv, generarEscritura} from './generacionCertificados.ts';
+import { crearCliente } from './coneccion.ts';
 
 export const instrucciones = [
     {comando: 'archivo', funcion: cargarATablaDesdeCsvLog},
@@ -17,8 +18,7 @@ export async function escribirEnLog(informacion: string){
 
 async function accionRegistrandoErroresEnLog(accion: Function, parametro: string | string[]){
     const param = typeof parametro == 'string' ? [parametro] : parametro;
-    const clientDB = new Client();
-    await clientDB.connect();
+    const clientDB = await crearCliente();
     try{
         await accion(clientDB, ...param);
     }catch(err){
