@@ -13,7 +13,9 @@ import type { Request, Response, NextFunction } from "express";
 import * as fs from 'fs';
 import { crearCliente } from "./acciones/coneccion.ts";
 
-dotenv.config({ debug: true, path: "./.env" }); // así activás el logeo
+if(!process.env.Render) {
+    dotenv.config({ debug: true, path: "./.env" }); // así activás el logeo
+}
 
 declare module 'express-session' {
     interface SessionData {
