@@ -9,7 +9,7 @@
       "ESNext.Promise"
     ],
     "module": "ESNext",                    // Sistema de módulos
-    "moduleResolution": "node",            // Resolución de módulos estilo Node.js
+    "moduleResolution": "NodeNext",            // Resolución de módulos estilo Node.js
     "allowJs": true,                       // Permitir compilar archivos JavaScript
     "checkJs": true,                       // Verificar tipos en archivos JavaScript
     "jsx": "react-jsx",                    // Soporte para JSX (ajustar según necesidad)
