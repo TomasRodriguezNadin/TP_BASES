@@ -1,7 +1,11 @@
-export const path_eventos = './base/';
+const path_src = "./src/";
+const path_recursos = "./recursos/"
+export const path_eventos = path_src + 'base/';
 export const path_entrada = path_eventos + 'entrada/';
 export const path_salida = path_eventos + 'salida/';
 export const archivo_eventos = path_entrada + 'generacion_certificados.csv';
 export const archivo_log = path_salida + 'log.txt';
-export const path_plantilla_escritura = '../recursos/plantilla-escritura.html';
-export const path_output = './local-output/';
+export const path_plantilla_escritura = 'recursos/plantilla-escritura.html';
+export const path_output = 'src/local-output/';
+export const login_html = path_recursos + 'login.html'
+export const path_plantilla_tabla = path_recursos + "template_tabla.html";

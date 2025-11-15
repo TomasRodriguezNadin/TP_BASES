@@ -1,17 +1,16 @@
 import express from "express";
 import { Client } from 'pg';
 import dotenv from "dotenv";
-import { pedirEscrituras} from './acciones/generacionCertificados.ts';
-import {actualizarTablasJSON} from "./acciones/accionesSQL.ts";
-import { warn } from "node:console";
-import { generarCRUD } from "./crud.ts";
+import { pedirEscrituras} from './acciones/generacionCertificados.js';
+import {actualizarTablasJSON} from "./acciones/accionesSQL.js";
+import { generarCRUD } from "./crud.js";
 import session from 'express-session';
-import type { SessionData } from "express-session";
-import { autenticarUsuario, crearUsuario } from './auth.ts';
-import type { Usuario } from "./auth.ts";
+import { autenticarUsuario, crearUsuario } from './auth.js';
+import type { Usuario } from "./auth.js";
 import type { Request, Response, NextFunction } from "express"; 
 import * as fs from 'fs';
-import { crearCliente } from "./acciones/coneccion.ts";
+import { crearCliente } from "./acciones/coneccion.js";
+import { login_html } from "./constantes.js";
 
 dotenv.config({ debug: true, path: "./.env" }); // así activás el logeo
 
@@ -62,12 +61,12 @@ app.get('/app/login', (req, res) => {
     if (req.session.usuario) {
         return res.redirect('/app/menu');
     }
-    const loginHtml = fs.readFileSync('./login.html', 'utf8');
+    const loginHtml = fs.readFileSync(login_html, 'utf8');
     res.send(loginHtml);
 });
 
 // API de login
-app.post('/api/v0/auth/login', express.json(), async (req, res) => {
+app.post('/api/v0/auth/login', express.json(), async (req: Request, res: Response) => {
     const cliente = await crearCliente();
 
     const username = req.body.username;
@@ -91,7 +90,7 @@ app.post('/api/v0/auth/login', express.json(), async (req, res) => {
 });
 
 // API de logout
-app.post('/api/v0/auth/logout', (req, res) => {
+app.post('/api/v0/auth/logout', (req: Request, res: Response) => {
     req.session.destroy((err: any) => {
         if (err) {
             return res.status(500).json({ error: 'Error al cerrar sesión' });
@@ -102,7 +101,7 @@ app.post('/api/v0/auth/logout', (req, res) => {
 
 
 // API de registro
-app.post('/api/v0/auth/register', express.json(), async (req, res) => {
+app.post('/api/v0/auth/register', express.json(), async (req: Request, res: Response) => {
     const cliente = await crearCliente();
 
     const parametros = req.body;
@@ -150,7 +149,7 @@ const HTML_MENU=
 </html>
 `;
 
-app.get('/app/menu', requireAuth, (_, res) => {
+app.get('/app/menu', requireAuth, (_, res: Response) => {
     res.send(HTML_MENU)
 })
 
@@ -196,7 +195,7 @@ function generarMenuEscrituras(parametros: Record<string, string>[], caso: strin
     return html;
 }
 
-app.get('/app/escritura', requireAuth, (_, res) => {
+app.get('/app/escritura', requireAuth, (_, res: Response) => {
     const parametros = [
         {titulo: "Matricula", atributo: "matricula"},
         {titulo: "Numero de Protocolo", atributo: "nroProtocolo"},
@@ -208,7 +207,7 @@ app.get('/app/escritura', requireAuth, (_, res) => {
     res.send(html);
 })
 
-app.get('/app/escriturasEscribano', requireAuth, (_, res) => {
+app.get('/app/escriturasEscribano', requireAuth, (_, res: Response) => {
     const parametros = [
         {titulo: "Matricula", atributo: "matricula"},
     ];
@@ -218,7 +217,7 @@ app.get('/app/escriturasEscribano', requireAuth, (_, res) => {
     res.send(html);
 })
 
-app.get('/app/escriturasCliente', requireAuth, (_, res) => {
+app.get('/app/escriturasCliente', requireAuth, (_, res: Response) => {
     const parametros = [
         {titulo: "CUIT", atributo: "cuit"},
     ];
@@ -318,31 +317,25 @@ const HTML_ARCHIVO_JSON=
 </html>
 `;
 
-app.get('/app/archivo-json', requireAuth, (_, res) => {
+app.get('/app/archivo-json', requireAuth, (_, res: Response) => {
     res.send(HTML_ARCHIVO_JSON)
 })
 
 
 // API DEL BACKEND
-var NO_IMPLEMENTADO='<code>ERROR 404 </code> <h1> No implementado aún ⚒<h1>';
 export const ERROR = '<code>ERROR 404 </code> <h1> error <h1>';
 
-async function enviarHTML(parametro: string, cliente: Client, generador: Function, res){
-    const html = await generador(cliente, parametro);
-    res.send(html);
-}
-
-async function enviarHTMLEscritura(cliente: Client, req, res){
+async function enviarHTMLEscritura(cliente: Client, req: Request, res: Response){
     const html = await pedirEscrituras(cliente, req.params);
     res.send(html[0]);
 }
 
-async function enviarHTMLEscrituras(cliente: Client, req, res){
+async function enviarHTMLEscrituras(cliente: Client, req: Request, res: Response){
     const html = await pedirEscrituras(cliente, req.params);
     res.send(html.join(`\n`));
 }
 
-async function cargarJSON(cliente: Client, req, res){
+async function cargarJSON(cliente: Client, req: Request, _: Response){
     const {tabla, data} = req.body;
     console.log(tabla, data);
 
@@ -350,7 +343,7 @@ async function cargarJSON(cliente: Client, req, res){
     console.log(tabla + " cargados correctamente");
 }
 
-async function atenderPedido(respuesta: Function, mensajeError: string, req, res){
+async function atenderPedido(respuesta: Function, mensajeError: string, req: Request, res: Response){
     console.log(req.params, req.query, req.body);
     const clientDB = await crearCliente();
 
@@ -358,13 +351,13 @@ async function atenderPedido(respuesta: Function, mensajeError: string, req, res
         await respuesta(clientDB, req, res);
     }catch(err){
         console.log(mensajeError + ` ${err}`);
-        res.status(404).send(ERROR.replace("error", err));
+        res.status(404).send(ERROR.replace("error", err as string));
     }finally{
         await clientDB.end();
     }
 }
 
-app.patch('/api/csv', requireAuthAPI, async (req, res) => {
+app.patch('/api/csv', requireAuthAPI, async (req: Request, res: Response) => {
     await atenderPedido(cargarJSON, "No se pudieron cargar los datos a la tabla", req, res);
 })
 
@@ -372,11 +365,11 @@ app.get('/api/v0/escritura/:matricula/:nro_Protocolo/:anio', requireAuthAPI, asy
     await atenderPedido(enviarHTMLEscritura, "No se pudo generar la escritura", req, res);
 })
 
-app.get('/api/v0/escritura/:matricula', requireAuthAPI, async (req, res) => {
+app.get('/api/v0/escritura/:matricula', requireAuthAPI, async (req: Request, res: Response) => {
     await atenderPedido(enviarHTMLEscrituras, "No se pudo generar la escritura", req, res);
 })
 
-app.get('/api/v0/escrituraCliente/:cuit', requireAuthAPI, async (req, res) => {
+app.get('/api/v0/escrituraCliente/:cuit', requireAuthAPI, async (req: Request, res: Response) => {
     await atenderPedido(enviarHTMLEscrituras, "No se pudo generar la escritura", req, res);
 })
 

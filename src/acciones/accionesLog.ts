@@ -1,9 +1,9 @@
 import { Client } from 'pg';
 import {writeFile, appendFile} from 'node:fs/promises';
-import { buscarDatosDeEscritura} from './accionesSQL.ts';
-import { path_salida, archivo_log} from '../constantes.ts'
-import {cargarATablaDesdeCsv, generarEscritura} from './generacionCertificados.ts';
-import { crearCliente } from './coneccion.ts';
+import { buscarDatosDeEscritura} from './accionesSQL.js';
+import { path_salida, archivo_log} from '../constantes.js'
+import {cargarATablaDesdeCsv, generarEscritura} from './generacionCertificados.js';
+import { crearCliente } from './coneccion.js';
 
 export const instrucciones = [
     {comando: 'archivo', funcion: cargarATablaDesdeCsvLog},
@@ -22,7 +22,7 @@ async function accionRegistrandoErroresEnLog(accion: Function, parametro: string
     try{
         await accion(clientDB, ...param);
     }catch(err){
-        escribirEnLog(err);
+        escribirEnLog(err as string);
     }finally{
         clientDB.end();
     }

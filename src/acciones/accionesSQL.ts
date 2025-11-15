@@ -54,7 +54,7 @@ export async function obtenerClavePrimariaTabla(client: Client, tabla: string): 
                                 WHERE i.indrelid = 'TP.${tabla}'::regclass
                                 AND i.indisprimary;`
     const res = await client.query(consultaPrimaryKey);
-    return res.rows.map(obj => Object.values(obj)[0]);
+    return res.rows.map(obj => Object.values(obj)[0]) as string[];
 }
 
 export async function editarFilaDeTabla(client: Client, tabla: string, fila: Record<string, string>){
@@ -67,9 +67,9 @@ export async function editarFilaDeTabla(client: Client, tabla: string, fila: Rec
     }
     // Para sacar la coma al final
     consulta = consulta.slice(0, -1);
-    let filtro = {};
+    let filtro: Record<string, string> = {};
     for (const clave of clavePrimaria){
-        filtro[clave] = fila[clave];
+        filtro[clave] = fila[clave] as string;
     }
     consulta = agregarFiltroAInstruccion(consulta, filtro);
     console.log(consulta);

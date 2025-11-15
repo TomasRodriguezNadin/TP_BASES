@@ -1,7 +1,7 @@
 import { readdir } from 'node:fs/promises';
-import {parsearCsv} from './acciones/accionesCSV.ts'
-import {archivo_eventos, path_entrada } from './constantes.ts'
-import { escribirEnLog, instrucciones, instruccionInvalidaHandler } from './acciones/accionesLog.ts';
+import {parsearCsv} from './acciones/accionesCSV.js';
+import {archivo_eventos, path_entrada } from './constantes.js';
+import { escribirEnLog, instrucciones, instruccionInvalidaHandler } from './acciones/accionesLog.js';
 import dotenv from "dotenv";
 
 type operacion = {
@@ -18,13 +18,13 @@ async function parsearInstrucciones(): Promise<operacion[]>{
         try{
             var {data} = await parsearCsv(archivo_eventos);
         }catch(err){
-            escribirEnLog(err);
+            escribirEnLog(err as string);
             var data: string[] = [];
         }
 
         for (const linea of data){
             const parametros = linea.split(",");
-            const comando = parametros[0];
+            const comando = parametros[0] ?? "";
             const argumentos = parametros.slice(1);
 
             const instruccion = instrucciones.find(ins => ins.comando === comando);

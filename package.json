@@ -1,0 +1,31 @@
+{
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "fs": "^0.0.1-security",
+    "pg": "^8.16.3",
+    "promise": "^8.3.0",
+    "proper-lockfile": "^4.1.2",
+    "ts-node": "^10.9.2",
+    "tsc": "^2.0.4",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/dotenv": "^6.1.1",
+    "@types/express-session": "^1.18.2",
+    "@types/node": "^24.3.1",
+    "@types/pg": "^8.15.6",
+    "@types/proper-lockfile": "^4.1.4",
+    "tsx": "^4.20.6"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "npx tsc",
+    "start": "node dist/servidor.js",
+    "servidor": "npm run build && npm run start",
+    "devStart": "npx tsx src/servidor.ts"
+  }
+}
