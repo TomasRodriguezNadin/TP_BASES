@@ -1,9 +1,10 @@
 import { Client } from 'pg';
 import {readFile} from 'node:fs/promises';
-import { path_plantilla_escritura } from '../constantes.ts';
-import { actualizarTabla, buscarEscribanoPorMatricula, buscarTipoPorID, buscarTabla } from './accionesSQL.ts';
-import { parsearCsv } from './accionesCSV.ts';
-import { Experiencia } from '../tipos.ts';
+import { path_plantilla_escritura } from '../constantes.js';
+import { actualizarTabla, buscarEscribanoPorMatricula, buscarTipoPorID, buscarTabla } from './accionesSQL.js';
+import { parsearCsv } from './accionesCSV.js';
+import { Experiencia } from '../tipos.js';
+import type { claveExperiencia } from '../tipos.js';
 
 function comoString(cadena: string|null): string{
     const res = cadena === null ? '' :
@@ -18,9 +19,9 @@ async function tieneExperienciaRequerida(cliente: Client, matricula: string, idT
     const resRequerida = await buscarTipoPorID(cliente, idTipo);
     if(resRequerida.length == 0) throw new Error(`No hay nigun tipo de escritura de id ${idTipo}`);
 
-    const experienciaEscribano = resEscribano[0].capacidad;
+    const experienciaEscribano = resEscribano[0].capacidad as claveExperiencia;
     console.log(experienciaEscribano);
-    const experienciaRequerida = resRequerida[0].experiencia_requerida;
+    const experienciaRequerida = resRequerida[0].experiencia_requerida as claveExperiencia;
     console.log(experienciaRequerida);
     console.log(Experiencia[experienciaRequerida] <= Experiencia[experienciaEscribano]);
     return Experiencia[experienciaRequerida] <= Experiencia[experienciaEscribano];
@@ -37,7 +38,7 @@ async function filtrarEscrituras(cliente: Client, escrituras: string[], categori
         const matricula = elementos[indiceMatricula];
         const idTipo = elementos[indiceTipo];
         console.log(linea);
-        if(await tieneExperienciaRequerida(cliente, matricula, idTipo)){
+        if(await tieneExperienciaRequerida(cliente, matricula!, idTipo!)){
             console.log(linea);
             listaFiltrada.push(linea);
         }

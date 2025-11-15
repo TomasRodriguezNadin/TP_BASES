@@ -35,7 +35,7 @@ export async function parsearCsv(archivoCsv:string): Promise<{data:string[], tit
 
     //const contents = await readFile(path, {encoding: 'utf8'});
     const firstLine = archivoCsv.split(/\r?\n/)[0];
-    const titles = firstLine.split(',').map(title => title.trim());
+    const titles = firstLine!.split(',').map(title => title.trim());
     const data = archivoCsv.split(/\r?\n/) // Separa en lineas
                         .slice(1) // Quita el primer elemento con los titulos
                         .filter(line => line.trim() !== ''); // Elimina las filas que no contienen info
