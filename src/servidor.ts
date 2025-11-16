@@ -378,3 +378,7 @@ await generarCRUD(app);
 app.listen(port, () => {
     console.log(`Example app listening on port http://localhost:${port}/app/login`)
 })
+
+app.get('/', requireAuth, async (_: Request, res: Response) => {
+    res.redirect('/app/menu');
+})
