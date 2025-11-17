@@ -323,7 +323,7 @@ app.get('/app/archivo-json', requireAuth, (_, res: Response) => {
 
 
 // API DEL BACKEND
-export const ERROR = '<code>ERROR 404 </code> <h1> error <h1>';
+const ERROR = '<code>ERROR 404 </code> <h1> error <h1>';
 
 async function enviarHTMLEscritura(cliente: Client, req: Request, res: Response){
     const html = await pedirEscrituras(cliente, req.params);

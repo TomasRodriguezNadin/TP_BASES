@@ -125,6 +125,7 @@ async function atenderPedido(respuesta: Function, tabla: string, req: Request, r
     try{
         await respuesta(clientDB, tabla, req, res);
     }catch(err){
+        const ERROR = "ERROR 404: error";
         console.log(`${err}`);
         res.status(404).send(ERROR.replace("error", err as string));
     }finally{
