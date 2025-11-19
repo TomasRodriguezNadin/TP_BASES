@@ -4,7 +4,6 @@ import { Client } from 'pg';
 import { actualizarTablasJSON, borrarFilaDeLaTabla, buscarTodosEnTabla, editarFilaDeTabla, obtenerAtributosTabla, obtenerClavePrimariaTabla, obtenerEnums, obtenerTipoDe} from "./acciones/accionesSQL.js";
 import { requireAuthAPI, requireAuth } from "./servidor.js";
 import {readFile} from 'node:fs/promises';
-import { ERROR } from "./servidor.js";
 import { crearCliente } from "./acciones/coneccion.js";
 import { path_plantilla_tabla } from "./constantes.js";
 
