@@ -1,7 +1,7 @@
 import { Client } from 'pg';
 import {writeFile, appendFile} from 'node:fs/promises';
 import { buscarDatosDeEscritura} from './accionesSQL.js';
-import { path_salida, archivo_log} from '../constantes.js'
+import { path_salida, archivo_log, path_entrada} from '../constantes.js'
 import {cargarATablaDesdeCsv, generarEscritura} from './generacionCertificados.js';
 import { crearCliente } from './coneccion.js';
 
@@ -29,7 +29,8 @@ async function accionRegistrandoErroresEnLog(accion: Function, parametro: string
 }
 
 async function cargarATablaDesdeCsvLog(tabla: string, path: string){
-    await accionRegistrandoErroresEnLog(cargarATablaDesdeCsv, [tabla, path]);
+    const pathDeArchivo = path_entrada + path;
+    await accionRegistrandoErroresEnLog(cargarATablaDesdeCsv, [tabla, pathDeArchivo]);
 }
 
 async function pedirCertificadoEscritura(matricula: string, numeroProtocolo: string, anio: string){
