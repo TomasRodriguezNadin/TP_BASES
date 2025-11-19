@@ -12,5 +12,16 @@ jobs:
   compilar:
     runs-on: ubuntu-latest
     steps:
-      - name: Compilacion
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Compilar
         run: npm run build
