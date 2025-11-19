@@ -25,3 +25,16 @@ jobs:
 
       - name: Compilar
         run: npm run build
+        
+  deploy:
+    needs: compilar
+    if: |
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    environment:
+      name: DEPLOYMENT
+    steps:
+      - name: Disparar deploy (GET)
+        run: |
+          curl "${{ secrets.URL_DEPLOYMENT }}"
