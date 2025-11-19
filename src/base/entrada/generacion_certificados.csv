@@ -1,8 +1,8 @@
 tipo,parametro
-archivo,escribanos,./base/entrada/ejemplo.csv
-archivo,clientes,./base/entrada/clientes.csv
-archivo,tipo_Escrituras,./base/entrada/tipoEscritura.csv
-archivo,escrituras,./base/entrada/escrituras.csv
-archivo,escrituras,./base/entrada/escrituraSinEscribano.csv
-archivo,escrituras,./base/entrada/escriturasSinTipo.csv
+archivo,escribanos,ejemplo.csv
+archivo,clientes,clientes.csv
+archivo,tipo_Escrituras,tipoEscritura.csv
+archivo,escrituras,escrituras.csv
+archivo,escrituras,escrituraSinEscribano.csv
+archivo,escrituras,escriturasSinTipo.csv
 escritura,123,1,2024

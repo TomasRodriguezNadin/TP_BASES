@@ -57,7 +57,10 @@ export async function cargarATablaDesdeCsv(cliente:Client, tabla: string, path:s
 
 export async function pedirEscrituras(cliente: Client, filtro: Record<string, string>): Promise<string[]>{
     const escrituras = await buscarTabla(cliente, "datos_escritura", filtro);
-    let htmls: string[] = [];
+    let htmls: string[] = escrituras.length == 0 ?
+                            ["No hay ninguna escritura con esas caracteristicas"] : 
+                            [];
+    // Solo agrega elementos si hay escrituras
     for (const escritura of escrituras){
         const html = await generarEscritura(escritura);
         htmls.push(html);

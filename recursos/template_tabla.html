@@ -35,6 +35,16 @@
 
     let filas = [];
 
+    async function fetchYAtenderError(ruta, argumentos, accion){
+        const res = await fetch(ruta, argumentos);
+
+        if(!res.ok){
+            const error = await res.text();
+            console.log(error);
+            alert(`Error ${accion} tabla \n ${error}`)
+        }
+    }
+
     async function actualizarTabla(){
       const tbody = document.querySelector('#Table tbody');
       tbody.innerHTML = '';
@@ -88,7 +98,7 @@
         ruta += `/${encodeURIComponent(fila[clave])}`
       }
       console.log(ruta);
-      await fetch(ruta, { method: 'DELETE' });
+      await fetchYAtenderError(ruta, { method: 'DELETE' }, "eliminando fila de")
       cargarTabla();
     }
 
@@ -105,11 +115,11 @@
         ruta += `/${encodeURIComponent(fila[clave])}`;
       }
 
-      await fetch(ruta, {
+      await fetchYAtenderError(ruta, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(nuevaFila)
-      });
+      }, "editando fila de");
       cargarTabla();
     }
 
@@ -120,11 +130,12 @@
       for (const atr of atributos){
         fila[atr[0]] = document.getElementById(`${atr[0]}`).value
       }
-      await fetch(API_URL, {
+      console.log("Agregando elemento");
+      await fetchYAtenderError(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(fila)
-      });
+      }, "agregando elemento a");
       e.target.reset();
       cargarTabla();
     });
