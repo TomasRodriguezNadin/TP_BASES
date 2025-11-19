@@ -25,7 +25,9 @@
   "scripts": {
     "build": "npx tsc",
     "start": "node dist/servidor.js",
+    "startCli": "node dist/cli.js",
     "servidor": "npm run build && npm run start",
+    "cli": "npm run build && npm run startCli",
     "devStart": "npx tsx src/servidor.ts"
   }
 }
