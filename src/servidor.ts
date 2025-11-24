@@ -133,10 +133,11 @@ const HTML_MENU=
 <html>
     <head>
         <meta charset="utf8">
+        <title>Menu - Escribania</title>
     </head>
     <body>
         <h1>Escribania</h1>
-        <p>menu</p>
+        <p>Menu</p>
         <p><a href="/app/escritura">Solicitar escritura</a></p>
         <p><a href="/app/escriturasEscribano">Solicitar escrituras por escribano</a></p>
         <p><a href="/app/escriturasCliente">Solicitar escrituras por cliente</a></p>
@@ -158,6 +159,7 @@ const HTML_PEDIR_ESCRITURA=
 <html>
     <head>
         <meta charset="utf8">
+        <title>Solicitar Escritura</title>
     </head>
     <body>
         <div>Obtener escritura</div>
