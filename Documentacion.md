@@ -50,6 +50,10 @@ Podemos pedir una escritura por sus identificadores, las de un escribano por su 
 
 Al acceder a una tabla, se nos mostrarán todos sus elementos (por ejemplo todos los escribanos) y podremos agregar nuevos elementos, editarlos, eliminarlos y ordenarlos.
 
+Tambien se puede ingresar al servidor directamente desde el link:
+https://tp-bases.onrender.com/
+Ya que este se encuentra siendo hosteado en render
+
 ## Uso del cli
 Desde la carpeta base/entrada en el root del servidor, hay que escribir un archivo "generacion_certificados.csv" con los comandos y parametros que le debemos pasar.
 
