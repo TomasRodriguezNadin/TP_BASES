@@ -105,9 +105,7 @@ app.post('/api/v0/auth/register', express.json(), async (req: Request, res: Resp
     const cliente = await crearCliente();
 
     const parametros = req.body;
-    console.log(parametros);
     const nuevoUsuario = await crearUsuario(cliente, parametros.username, parametros.password, parametros.nombre, parametros.email);
-    console.log(nuevoUsuario);
 
     if(nuevoUsuario){
         req.session.usuario = nuevoUsuario;
@@ -208,7 +206,6 @@ async function enviarHTMLEscrituras(cliente: Client, req: Request, res: Response
 
 async function cargarJSON(cliente: Client, req: Request, _: Response){
     const {tabla, data} = req.body;
-    console.log(tabla, data);
 
     await actualizarTablasJSON(cliente, tabla, data);
     console.log(tabla + " cargados correctamente");

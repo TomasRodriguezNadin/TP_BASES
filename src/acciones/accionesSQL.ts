@@ -72,7 +72,6 @@ export async function editarFilaDeTabla(client: Client, tabla: string, fila: Rec
         filtro[clave] = fila[clave] as string;
     }
     consulta = agregarFiltroAInstruccion(consulta, filtro);
-    console.log(consulta);
     await client.query(consulta);
 }
 
@@ -81,7 +80,6 @@ export async function actualizarTabla(client:Client, tabla: string, lista:string
         const datos = linea.split(',').map(value => value.trim());
         const instruccion = `INSERT INTO TP.${tabla} (${columnas.join(', ')}) VALUES
                             (${datos.map((dato) => dato === '' ? 'null' : sqlLiteral(dato) ).join(',')})`;
-        console.log(instruccion);
         await client.query(instruccion);
     }
 }
@@ -99,8 +97,6 @@ export async function actualizarTablasJSON(cliente: Client, tabla: string, conte
 
         const instruccion = `INSERT INTO TP.${tabla} (${columnas}) VALUES
                             (${aInsertar})`;
-
-        console.log(instruccion);
 
         await cliente.query(instruccion, valores);
     }
