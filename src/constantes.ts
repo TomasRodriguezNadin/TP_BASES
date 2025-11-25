@@ -8,3 +8,6 @@ export const path_plantilla_escritura = 'recursos/plantilla-escritura.html';
 export const path_output = 'src/local-output/';
 export const login_html = path_recursos + 'login.html'
 export const path_plantilla_tabla = path_recursos + "template_tabla.html";
+export const menu_html = path_recursos + "menu.html";
+export const plantilla_pedir_escritura = path_recursos + "plantilla-solicitar-escritura.html";
+export const subir_archivo_json = path_recursos + "subir-json.html";
