@@ -20,10 +20,7 @@ async function tieneExperienciaRequerida(cliente: Client, matricula: string, idT
     if(resRequerida.length == 0) throw new Error(`No hay nigun tipo de escritura de id ${idTipo}`);
 
     const experienciaEscribano = resEscribano[0].capacidad as claveExperiencia;
-    console.log(experienciaEscribano);
     const experienciaRequerida = resRequerida[0].experiencia_requerida as claveExperiencia;
-    console.log(experienciaRequerida);
-    console.log(Experiencia[experienciaRequerida] <= Experiencia[experienciaEscribano]);
     return Experiencia[experienciaRequerida] <= Experiencia[experienciaEscribano];
 }
 
@@ -39,7 +36,6 @@ async function filtrarEscrituras(cliente: Client, escrituras: string[], categori
         const idTipo = elementos[indiceTipo];
         console.log(linea);
         if(await tieneExperienciaRequerida(cliente, matricula!, idTipo!)){
-            console.log(linea);
             listaFiltrada.push(linea);
         }
     }
