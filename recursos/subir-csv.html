@@ -16,13 +16,14 @@
     <option value="1" label = "escribanos">Escribanos</option>
     <option value="2" label = "clientes">Clientes</option>
     <option value="3" label = "escrituras">Escrituras</option>
+    <option value="4" label = "tipo_escrituras">Tipos de escrituras</option>
   </select>
 
   <br><br>
 
   <script>
     function parseCSV(text) {
-      const lines = text.trim().split(/\\r?\\n/);
+      const lines = text.trim().split(/\r?\n/);
       const headers = lines[0].split(',').map(h => h.trim());
       const data = lines.slice(1).map(line => {
         const values = line.split(',').map(v => v.trim());

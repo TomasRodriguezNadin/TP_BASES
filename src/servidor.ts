@@ -10,7 +10,7 @@ import type { Usuario } from "./auth.js";
 import type { Request, Response, NextFunction } from "express"; 
 import * as fs from 'fs';
 import { crearCliente } from "./acciones/coneccion.js";
-import { login_html, menu_html, subir_archivo_json, plantilla_pedir_escritura} from "./constantes.js";
+import { login_html, menu_html, subir_csv, plantilla_pedir_escritura} from "./constantes.js";
 
 dotenv.config({ debug: true, path: "./.env" }); // así activás el logeo
 
@@ -184,10 +184,10 @@ app.get('/app/escriturasCliente', requireAuth, (_, res: Response) => {
 })
 
 
-app.get('/app/archivo-json', requireAuth, (_, res: Response) => {
-    const HTML_ARCHIVO_JSON = fs.readFileSync(subir_archivo_json, 'utf8');
+app.get('/app/subir-csv', requireAuth, (_, res: Response) => {
+    const HTML_SUBIR_CSV = fs.readFileSync(subir_csv, 'utf8');
     
-    res.send(HTML_ARCHIVO_JSON);
+    res.send(HTML_SUBIR_CSV);
 })
 
 
@@ -204,10 +204,11 @@ async function enviarHTMLEscrituras(cliente: Client, req: Request, res: Response
     res.send(html.join(`\n`));
 }
 
-async function cargarJSON(cliente: Client, req: Request, _: Response){
+async function cargarJSON(cliente: Client, req: Request, res: Response){
     const {tabla, data} = req.body;
-
+    
     await actualizarTablasJSON(cliente, tabla, data);
+    res.json("OK");
     console.log(tabla + " cargados correctamente");
 }
 
