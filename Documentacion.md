@@ -42,11 +42,28 @@ y una vez no quedan escrituras de un escribano no contratado lo eliminamos del s
 ## Uso del servidor
 Una vez corremos npm run servidor, se escribe un link en la terminal para acceder a este.
 
-Una vez entramos a ese link, tenemos 2 opciones:
+Una vez entramos a ese link, tenemos 3 opciones:
 - Pedir una escritura
+- Agregar elementos a una tabla con un csv
 - Acceder a una tabla
 
 Podemos pedir una escritura por sus identificadores, las de un escribano por su matrícula o las de un cliente por su CUIL. En cuyo caso se generarán las escrituras y se podrán ver.
+
+En caso de agregar elementos a una tabla con el csv, hay que subir un archivo csv con formato:
+
+columna1,columna2,....,columnan
+
+fila1
+
+fila2
+
+.
+
+.
+
+.
+
+y elegir en el menu desplegable la tabla a la que estamos agregando estos elementos.
 
 Al acceder a una tabla, se nos mostrarán todos sus elementos (por ejemplo todos los escribanos) y podremos agregar nuevos elementos, editarlos, eliminarlos y ordenarlos.
 
