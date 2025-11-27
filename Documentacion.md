@@ -1,4 +1,4 @@
-# Documentacion para usar Escribania s.a.
+# Documentacion para usar Escribania
 
 ## Set up
 Desde postgresql, correr los scripts de sql de la carpeta "recursos/" en el orden:
@@ -7,19 +7,19 @@ Desde postgresql, correr los scripts de sql de la carpeta "recursos/" en el orde
 - creacion-tabla-usuarios.sql
 - creacion-vista.sql
 - creacion-trigger.sql
-Modificando los nombres y variables que quiera.
+Modificando los nombres y variables que quiera, si se quiere ejecutar de forma local.
 
-Una vez hecho esto, crear un archivo .env en el directorio root del proyecto con las variables
+Una vez hecho esto, crear un archivo .env en el directorio root del proyecto con estas variables, modificandolas segun modifique el codigo sql.
 
 PGUSER=administrador
 
-PGPASSWORD=su_contraseña
+PGPASSWORD=temporal
 
 PGHOST=su_host
 
 PGPORT=su_port
 
-PGDATABASE=nombre_de_la_base_de_datos
+PGDATABASE=tp
 
 DATABASE_URL=postgresql://administrador.zlzzbblcbtijtsjqqipd:temporal@aws-1-us-east-1.pooler.supabase.com:6543/postgres
 
@@ -29,6 +29,7 @@ DB=Local o Produccion segun si quiere acceder a la base de datos local o de rend
 Desde el directorio root del proyecto pueden correr:
 - npm run servidor
 - npm run cli
+  
 Segun si se quiere usar la pagina o el cli.
 
 ## Detalles del sistema
@@ -69,6 +70,7 @@ Al acceder a una tabla, se nos mostrarán todos sus elementos (por ejemplo todos
 
 Tambien se puede ingresar al servidor directamente desde el link:
 https://tp-bases.onrender.com/
+
 Ya que este se encuentra siendo hosteado en render
 
 ## Uso del cli
