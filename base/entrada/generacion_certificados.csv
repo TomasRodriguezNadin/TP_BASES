@@ -1,5 +1,5 @@
 tipo,parametro
-archivo,escribanos,ejemplo.csv
+archivo,escribanos,escribanos.csv
 archivo,clientes,clientes.csv
 archivo,tipo_Escrituras,tipoEscritura.csv
 archivo,escrituras,escrituras.csv
