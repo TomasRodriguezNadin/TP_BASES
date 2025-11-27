@@ -131,8 +131,17 @@ app.get('/app/menu', requireAuth, (_, res: Response) => {
     res.send(HTML_MENU);
 })
 
-function generarMenuEscrituras(parametros: Record<string, string>[], caso: string): string{
+function generarMenuEscrituras(labels: string, variables: string, encoding: string){
     let html = fs.readFileSync(plantilla_pedir_escritura, 'utf8');;
+
+    html = html.replace("#[labels]", labels);
+    html = html.replace("#[vars]", variables);
+    html = html.replace("#[uri]", encoding);
+
+    return html;
+}
+
+function generarMenuEscriturasURLParams(parametros: Record<string, string>[]): string{
     let labels = "";
     let variables = "";
     let uriComponents = "";
@@ -143,12 +152,17 @@ function generarMenuEscrituras(parametros: Record<string, string>[], caso: strin
         uriComponents += `+ "/" + encodeURIComponent(${parametro.atributo})`; 
     }
 
-    html = html.replace("#[labels]", labels);
-    html = html.replace("#[vars]", variables);
-    html = html.replace("#[uri]", uriComponents);
-    html = html.replace("#[Caso]", caso)
+    return generarMenuEscrituras(labels, variables, uriComponents);
+}
 
-    return html;
+function generarMenuEscriturasQueryParams(titulo: string, columna: string){
+    const labels = `<div><label>${titulo}: <input name=valor></label></div>`;
+    const variables = `const valor = document.getElementsByName("valor")[0].value;
+    const columna = '${columna}';`;
+
+    const encoding = `+ '?columna=${columna}&valor=' + valor`;
+
+    return generarMenuEscrituras(labels, variables, encoding);
 }
 
 app.get('/app/escritura', requireAuth, (_, res: Response) => {
@@ -158,27 +172,19 @@ app.get('/app/escritura', requireAuth, (_, res: Response) => {
         {titulo: "Año", atributo: "anio"}
     ];
 
-    const html = generarMenuEscrituras(parametros, "");
+    const html = generarMenuEscriturasURLParams(parametros);
     
     res.send(html);
 })
 
 app.get('/app/escriturasEscribano', requireAuth, (_, res: Response) => {
-    const parametros = [
-        {titulo: "Matricula", atributo: "matricula"},
-    ];
-
-    const html = generarMenuEscrituras(parametros, "");
+    const html = generarMenuEscriturasQueryParams("Matricula", "matricula");
     
     res.send(html);
 })
 
 app.get('/app/escriturasCliente', requireAuth, (_, res: Response) => {
-    const parametros = [
-        {titulo: "CUIT", atributo: "cuit"},
-    ];
-
-    const html = generarMenuEscrituras(parametros, "Cliente");
+    const html = generarMenuEscriturasQueryParams("Cuit", "cuit");
     
     res.send(html);
 })
@@ -200,7 +206,10 @@ async function enviarHTMLEscritura(cliente: Client, req: Request, res: Response)
 }
 
 async function enviarHTMLEscrituras(cliente: Client, req: Request, res: Response){
-    const html = await pedirEscrituras(cliente, req.params);
+    console.log(req.query);
+    const columna = req.query.columna as string;
+    const valor = req.query.valor as string;
+    const html = await pedirEscrituras(cliente, {[columna]: valor});
     res.send(html.join(`\n`));
 }
 
@@ -234,11 +243,7 @@ app.get('/api/v0/escritura/:matricula/:nro_Protocolo/:anio', requireAuthAPI, asy
     await atenderPedido(enviarHTMLEscritura, "No se pudo generar la escritura", req, res);
 })
 
-app.get('/api/v0/escritura/:matricula', requireAuthAPI, async (req: Request, res: Response) => {
-    await atenderPedido(enviarHTMLEscrituras, "No se pudo generar la escritura", req, res);
-})
-
-app.get('/api/v0/escrituraCliente/:cuit', requireAuthAPI, async (req: Request, res: Response) => {
+app.get('/api/v0/escritura', requireAuthAPI, async (req: Request, res: Response) => {
     await atenderPedido(enviarHTMLEscrituras, "No se pudo generar la escritura", req, res);
 })
 
