@@ -94,21 +94,24 @@
       const fila = filas[indice];
       let ruta = `${API_URL}`;
       for (const clave of clavesPrimarias){
-        console.log(clave);
         ruta += `/${encodeURIComponent(fila[clave])}`
       }
-      console.log(ruta);
       await fetchYAtenderError(ruta, { method: 'DELETE' }, "eliminando fila de")
       cargarTabla();
     }
 
     async function editarFila(indice) {
       const fila = filas[indice];
-      let nuevaFila = { ...fila };
-      const elementosNoPrimarios = Object.entries(fila).filter(([key, _]) => !clavesPrimarias.includes(key));
-      for ([key, value] of elementosNoPrimarios){
-        nuevaFila[key] = prompt(`${key}: `, value).toString();
+      let nuevaFila = {};
+      for (key of clavesPrimarias){
+            nuevaFila[key] = fila[key];
       }
+
+      const elementosNoPrimarios = atributos.filter(atributo => !clavesPrimarias.includes(atributo));
+      for (key of elementosNoPrimarios){
+            nuevaFila[key] = prompt(`${key.replace("_", " ")}: `, fila[key]).toString();
+      }
+
 
       let ruta = `${API_URL}`;
       for (const clave of clavesPrimarias){
@@ -130,7 +133,6 @@
       for (const atr of atributos){
         fila[atr[0]] = document.getElementById(`${atr[0]}`).value
       }
-      console.log("Agregando elemento");
       await fetchYAtenderError(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
