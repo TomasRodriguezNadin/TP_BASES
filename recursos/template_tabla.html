@@ -30,7 +30,8 @@
   <script>
     const API_URL = #[Ruta];
     const clavesPrimarias = #[PK];
-    const atributos = #[Attr]
+    const atributos = #[Attr];
+    const solicitaEscritura = #[Solicita];
     let ordenarPorAtributo = null;
 
     let filas = [];
@@ -54,9 +55,14 @@
         for (value of Object.values(f)){
           html += `<td>${value || ''}</td>\n`;
         }
+        let botonSolicitarEscritura = "";
+        if(solicitaEscritura){
+          botonSolicitarEscritura = `<button onclick="solicitarEscritura(${indice})">Solicitar Escritura/s</button>`;
+        }
+
         html += `
           <td>
-            <button onclick="editarFila(${indice})">Editar</button>
+            ${botonSolicitarEscritura} <button onclick="editarFila(${indice})">Editar</button>
             <button onclick="eliminarFila(${indice})">Borrar</button>
           </td>`;
         tr.innerHTML = html;
@@ -89,6 +95,16 @@
       actualizarTabla();
     }
 
+    async function solicitarEscritura(indice){
+      const fila = filas[indice];
+      if(fila.nro_protocolo !== undefined && fila.anio !== undefined){
+        window.location.href = `../api/v0/escritura/${fila.matricula}/${fila.nro_protocolo}/${fila.anio}`;
+      } 
+      else {
+         window.location.href = `../api/v0/escritura?columna=matricula&valor=${fila.matricula}`;
+      }
+    }
+    
     async function eliminarFila(indice) {
       if (!confirm('¿Seguro que deseas borrar este elemento?')) return;
       const fila = filas[indice];

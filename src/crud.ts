@@ -84,7 +84,7 @@ async function generarHTML(datos: datosTabla): Promise<string>{
         tituloLista: `${datos.titulo}`,
         entidad: `${datos.registro}`
     };
-
+    const habilitarSolicitud = (datos.tabla === 'escribanos' || datos.tabla === 'escrituras'); 
 
     let html = await readFile(path_plantilla_tabla, {encoding: 'utf8'});
     for (const [clave, valor] of Object.entries(textos)) {
@@ -97,6 +97,7 @@ async function generarHTML(datos: datosTabla): Promise<string>{
 
     const clavePrimaria = await obtenerClavePrimariaTabla(cliente, datos.tabla);
 
+    html = html.replace('#[Solicita]', habilitarSolicitud.toString());
     html = html.replace(`#[Attr]`, JSON.stringify(atributos.map(elem => elem[0] as string)));
     html = html.replace("#[PK]", JSON.stringify(clavePrimaria));
 
