@@ -45,6 +45,7 @@ async function editarFila(cliente: Client, tabla: string, req: Request, res: Res
 }
 
 function generarTable(atributos: string[]): string{
+    console.log(atributos);
     return atributos.map((atributo: string) => 
                                 `<th>${atributo.replace("_", " ")} <button onclick="ordenarPor('${atributo}')">↓</button></th>`)
                                 .join(`\n`);
@@ -52,27 +53,27 @@ function generarTable(atributos: string[]): string{
 }
 
 
-async function generarForm(cliente: Client, atributos: string[][], tabla: string): Promise<string>{
+async function generarForm(cliente: Client, atributos: string[], tabla: string): Promise<string>{
 
-    const res = await Promise.all(atributos.map(async (atributo: string[]) =>{ 
+    const res = await Promise.all(atributos.map(async (atributo: string) =>{ 
 
         if(atributo[1] == 'USER-DEFINED'){
-            let enums = await obtenerEnums(cliente, await obtenerTipoDe(cliente, tabla, atributo[0] as string));
+            let enums = await obtenerEnums(cliente, await obtenerTipoDe(cliente, tabla, atributo));
             
             const opcionesHTML = enums
           .map(valor => `<option value="${valor}">${valor}</option>`)
           .join('\n');
 
         return `
-          <label for="${atributo[0]}">${atributo[0]!.replace("_", " ")}:</label>
-          <select id="${atributo[0]}" name="${atributo[0]}" required>
+          <label for="${atributo}">${atributo.replace("_", " ")}:</label>
+          <select id="${atributo}" name="${atributo}" required>
             <option value="">Seleccione una opción</option>
             ${opcionesHTML}
           </select>
         `;
         }
 
-        return `<input id="${atributo[0]}" placeholder="${atributo[0]!.replace("_", " ")}" required />`;
+        return `<input id="${atributo}" placeholder="${atributo.replace("_", " ")}" required />`;
         
     })); 
     
@@ -97,11 +98,12 @@ async function generarHTML(datos: datosTabla): Promise<string>{
 
     const clavePrimaria = await obtenerClavePrimariaTabla(cliente, datos.tabla);
 
-    html = html.replace('#[Solicita]', habilitarSolicitud.toString());
-    html = html.replace(`#[Attr]`, JSON.stringify(atributos.map(elem => elem[0] as string)));
+    html = html.replace(`#[Attr]`, JSON.stringify(atributos));
     html = html.replace("#[PK]", JSON.stringify(clavePrimaria));
 
-    const table = generarTable(atributosVisuales.map(elem => elem[0] as string));
+    console.log(atributosVisuales);
+    console.log(atributosVisuales);
+    const table = generarTable(atributosVisuales);
     html = html.replace("#[Table]", table);
 
     const form = await generarForm(cliente, atributos, datos.tabla);
