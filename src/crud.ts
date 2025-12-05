@@ -1,7 +1,7 @@
 import * as Express from "express";
 import type { Request, Response } from "express";
 import { Client } from 'pg';
-import { actualizarTablasJSON, borrarFilaDeLaTabla, buscarTodosEnTabla, editarFilaDeTabla, obtenerAtributosTabla, obtenerClavePrimariaTabla, obtenerEnums, obtenerTipoDe} from "./acciones/accionesSQL.js";
+import { actualizarTablasJSON, borrarFilaDeLaTabla, buscarTodosEnTabla, editarFilaDeTabla, obtenerClavePrimariaTabla, obtenerEnums, obtenerTipoDe} from "./acciones/accionesSQL.js";
 import { requireAuthAPI, requireAuth } from "./servidor.js";
 import {readFile} from 'node:fs/promises';
 import { crearCliente } from "./acciones/coneccion.js";
@@ -14,6 +14,16 @@ interface datosTabla {
     registro: string,
     tablaVisual: string
 }
+
+const columnasTabla = {
+    datos_escritura: ["matricula", "nro_protocolo", "anio", "nombre_escribano", "apellido_escribano", "cuit", "nombre", "apellido", "id_tipo", "tipo"],
+    escribanos: ["matricula", "nombre_escribano", "apellido_escribano", "capacidad", "estado"],
+    clientes: ["cuit", "nombre", "apellido"],
+    escrituras: ["matricula", "nro_protocolo", "anio", "cuit", "id_tipo"],
+    tipo_escrituras: ["id_tipo", "tipo", "experiencia_requerida"]
+}
+
+
 
 const tables: datosTabla[] = [
     {tabla: "escribanos", titulo: "Escribanos", ruta: "/api/escribanos", registro: "escribano", tablaVisual: "escribanos"},
@@ -93,11 +103,12 @@ async function generarHTML(datos: datosTabla): Promise<string>{
     }
     const cliente = await crearCliente();
 
-    let atributos = await obtenerAtributosTabla(cliente, datos.tabla);
-    const atributosVisuales = await obtenerAtributosTabla(cliente, datos.tablaVisual);
+    let atributos = columnasTabla[datos.tabla as keyof typeof columnasTabla];
+    const atributosVisuales = columnasTabla[datos.tablaVisual as keyof typeof columnasTabla];;
 
     const clavePrimaria = await obtenerClavePrimariaTabla(cliente, datos.tabla);
 
+    html = html.replace('#[Solicita]', habilitarSolicitud.toString());
     html = html.replace(`#[Attr]`, JSON.stringify(atributos));
     html = html.replace("#[PK]", JSON.stringify(clavePrimaria));
 
