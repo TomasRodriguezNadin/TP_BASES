@@ -23,7 +23,7 @@ const columnasTabla = {
     tipo_escrituras: ["id_tipo", "tipo", "experiencia_requerida"]
 }
 
-
+const enums = ["experiencia", "estado"];
 
 const tables: datosTabla[] = [
     {tabla: "escribanos", titulo: "Escribanos", ruta: "/api/escribanos", registro: "escribano", tablaVisual: "escribanos"},
@@ -55,7 +55,6 @@ async function editarFila(cliente: Client, tabla: string, req: Request, res: Res
 }
 
 function generarTable(atributos: string[]): string{
-    console.log(atributos);
     return atributos.map((atributo: string) => 
                                 `<th>${atributo.replace("_", " ")} <button onclick="ordenarPor('${atributo}')">↓</button></th>`)
                                 .join(`\n`);
@@ -66,8 +65,9 @@ function generarTable(atributos: string[]): string{
 async function generarForm(cliente: Client, atributos: string[], tabla: string): Promise<string>{
 
     const res = await Promise.all(atributos.map(async (atributo: string) =>{ 
+        const tipo = await obtenerTipoDe(cliente, tabla, atributo);
 
-        if(atributo[1] == 'USER-DEFINED'){
+        if(enums.includes(tipo)){
             let enums = await obtenerEnums(cliente, await obtenerTipoDe(cliente, tabla, atributo));
             
             const opcionesHTML = enums
@@ -112,8 +112,6 @@ async function generarHTML(datos: datosTabla): Promise<string>{
     html = html.replace(`#[Attr]`, JSON.stringify(atributos));
     html = html.replace("#[PK]", JSON.stringify(clavePrimaria));
 
-    console.log(atributosVisuales);
-    console.log(atributosVisuales);
     const table = generarTable(atributosVisuales);
     html = html.replace("#[Table]", table);
 
