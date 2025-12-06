@@ -59,3 +59,36 @@ CREATE OR REPLACE TRIGGER eliminar_escribanos_no_contratados_despues_de_insertar
 AFTER INSERT OR UPDATE ON tp.escribanos
 FOR EACH STATEMENT
 EXECUTE FUNCTION tp.eliminar_escribanos_no_contratados();
+
+
+CREATE OR REPLACE FUNCTION tp.verificar_experiencia_escritura()
+RETURNS TRIGGER AS $$
+DECLARE
+    experiencia_esc experiencia;
+    experiencia_req experiencia;
+BEGIN
+    SELECT e.capacidad
+    INTO experiencia_esc
+    FROM tp.escribanos e
+    WHERE e.matricula = NEW.matricula;
+
+    SELECT t.experiencia_requerida
+    INTO experiencia_req
+    FROM tp.tipo_escrituras t
+    WHERE t.id_tipo = NEW.id_tipo;
+
+    IF experiencia_esc < experiencia_req THEN
+        RAISE EXCEPTION
+            'El escribano % no tiene la capacidad necesaria para realizar la escritura de id %',
+            NEW.matricula, NEW.id_tipo;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER trg_verificar_experiencia_escritura
+BEFORE INSERT OR UPDATE ON tp.escrituras
+FOR EACH ROW
+EXECUTE FUNCTION tp.verificar_experiencia_escritura();
