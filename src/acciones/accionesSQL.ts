@@ -38,14 +38,6 @@ export async function obtenerTipoDe(client:Client, tabla:string, Nombrecolumna:s
     return res.rows[0].real_data_type;
 }
 
-export async function obtenerAtributosTabla(client: Client, tabla: string): Promise<string[][]>{
-    const consultaAtributos = `SELECT column_name, data_type
-                    FROM information_schema.columns
-                    WHERE table_name = '${tabla}'`;
-    const res = await client.query(consultaAtributos);
-    return res.rows.map(col => [col.column_name, col.data_type]);
-}
-
 export async function obtenerClavePrimariaTabla(client: Client, tabla: string): Promise<string[]>{
     const consultaPrimaryKey = `SELECT a.attname
                                 FROM pg_index i
