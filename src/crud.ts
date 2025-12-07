@@ -30,9 +30,9 @@ async function editarFila(cliente: Client, tabla: string, req: Request, res: Res
     res.json("OK");
 }
 
-function generarTable(atributos: string[]): string{
-    return atributos.map((atributo: string) => 
-                                `<th>${atributo} <button onclick="ordenarPor('${atributo}')">↓</button></th>`)
+function generarTable(atributos: Atributos[]): string{
+    return atributos.map((atributo: Atributos) => 
+                                `<th>${atributo.visual} <button onclick="ordenarPor('${atributo.nombre}')">↓</button></th>`)
                                 .join(`\n`);
 
 }
@@ -83,7 +83,7 @@ async function generarHTML(datos: datosTabla): Promise<string>{
     }
 
     let infoAtributos = columnasTabla[datos.tabla as keyof typeof columnasTabla];
-    let atributosVisuales = columnasTabla[datos.tablaVisual as keyof typeof columnasTabla].map((at:Atributos) => at.visual);
+    let infoAtributosVisuales = columnasTabla[datos.tablaVisual as keyof typeof columnasTabla];
 
     const clavePrimaria = obtenerPK(datos.tabla);
 
@@ -91,7 +91,7 @@ async function generarHTML(datos: datosTabla): Promise<string>{
     html = html.replace(`#[Attr]`, JSON.stringify(infoAtributos.map((at: Atributos) => at.nombre)));
     html = html.replace("#[PK]", JSON.stringify(clavePrimaria));
 
-    const table = generarTable(atributosVisuales);
+    const table = generarTable(infoAtributosVisuales);
     html = html.replace("#[Table]", table);
 
     const form = await generarForm(infoAtributos);
