@@ -1,3 +1,7 @@
+interface PedidoMetadatos {
+    tabla: keyof typeof columnasTablas;
+    columnas: string[]; }
+
 export function buscarEnum(nombre: string) {
     return enums[nombre as keyof typeof enums] ?? null;
 }
@@ -6,10 +10,19 @@ export function obtenerPK(tabla: keyof typeof columnasTablas): string[] {
     return columnasTablas[tabla].filter(col => col.esPK).map(col => col.nombre);
 }
 
-function obtenerInfoDe(datosAObtener: string[], tabla: keyof typeof columnasTablas): Atributos[]{
-    const columnas = columnasTablas[tabla];
+function obtenerMetadatosDe(datosAObtener: PedidoMetadatos[]): Atributos[]{
+    
+    const res: Atributos[] = [];
 
-    return columnas.filter(col => datosAObtener.includes(col.nombre));
+    for (const pedido of datosAObtener) {
+
+        const columnas = columnasTablas[pedido.tabla];
+
+        const filtradas = columnas.filter(col => pedido.columnas.includes(col.nombre));
+        res.push(...filtradas);
+    }
+
+    return res;
 }
 
 export interface datosTabla {
@@ -58,8 +71,14 @@ const columnasTablas =
 export const columnasTablasYVistas =
 {...columnasTablas,
    datos_escritura: 
-        [...obtenerInfoDe(["matricula", "nro_protocolo", "anio"], "escrituras"), ...obtenerInfoDe(["nombre_escribano", "apellido_escribano"], "escribanos"),
-         ...obtenerInfoDe(["cuit", "nombre", "apellido"], "clientes"), ...obtenerInfoDe(["id_tipo", "tipo"], "tipo_escrituras")],
+        obtenerMetadatosDe(
+        [{tabla: "escrituras", columnas: ["matricula", "nro_protocolo", "anio"]},
+            {tabla: "escribanos", columnas: ["nombre_escribano", "apellido_escribano"]},
+            {tabla: "escrituras", columnas: ["cuit"]},
+            {tabla: "clientes", columnas: ["nombre", "apellido"]},
+            {tabla: "escrituras", columnas: ["id_tipo"]},
+            {tabla: "tipo_escrituras", columnas: ["tipo"]}
+        ])
 }
 
 export const tables: datosTabla[] = [
