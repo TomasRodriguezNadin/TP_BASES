@@ -13,30 +13,33 @@ function sqlLiteral(literal:string|number|null): string{
 
     return res;
 }
-export async function obtenerEnums(client:Client, tipo:string): Promise<string[]>{
-    const consultarEnums = `SELECT enumlabel
-                    FROM pg_enum
-                    JOIN pg_type ON pg_enum.enumtypid = pg_type.oid
-                    WHERE pg_type.typname = ${sqlLiteral(tipo)};`;
-    
-    const res = await client.query(consultarEnums);
-    
-    return res.rows.map(row => row.enumlabel);
+
+export async function obtenerCamposDeTablaCon(client: Client, tablaRelacionada:string | undefined, campo:string, campoExtra: string | undefined): Promise<string[]>{
+    let query = `SELECT ${campo} `;
+
+    query += campoExtra ? 
+            `, ${campoExtra} ` 
+            : "";
+
+    query += `FROM TP.${tablaRelacionada}`;
+    query += `\n ORDER BY ${campo}`;
+
+    const resQuery = await client.query(query);
+    const res: string[] = [];
+
+    for (const fila of resQuery.rows) {
+        if (campoExtra) {
+            res.push(`${fila[campo]} - ${fila[campoExtra]}`);
+        } else {
+            res.push(String(fila[campo]));
+        }
+    }
+
+    console.log(res);
+
+    return res;
 }
 
-export async function obtenerTipoDe(client:Client, tabla:string, Nombrecolumna:string): Promise<string>{
-    const consultarEnums = `SELECT
-                c.column_name,
-                t.typname AS real_data_type
-                FROM information_schema.columns c
-                JOIN pg_type t ON t.oid = c.udt_name::regtype::oid
-                WHERE c.table_name = ${sqlLiteral(tabla)} AND c.column_name = ${sqlLiteral(Nombrecolumna)} ;`;
-    
-    const res = await client.query(consultarEnums);
-    
-
-    return res.rows[0].real_data_type;
-}
 
 export async function obtenerClavePrimariaTabla(client: Client, tabla: string): Promise<string[]>{
     const consultaPrimaryKey = `SELECT a.attname

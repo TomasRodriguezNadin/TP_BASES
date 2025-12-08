@@ -1,36 +1,12 @@
 import * as Express from "express";
 import type { Request, Response } from "express";
 import { Client } from 'pg';
-import { actualizarTablasJSON, borrarFilaDeLaTabla, buscarTodosEnTabla, editarFilaDeTabla, obtenerClavePrimariaTabla, obtenerEnums, obtenerTipoDe} from "./acciones/accionesSQL.js";
+import { actualizarTablasJSON, borrarFilaDeLaTabla, buscarTodosEnTabla, editarFilaDeTabla, obtenerCamposDeTablaCon} from "./acciones/accionesSQL.js";
 import { requireAuthAPI, requireAuth } from "./servidor.js";
 import {readFile} from 'node:fs/promises';
 import { crearCliente } from "./acciones/coneccion.js";
 import { path_plantilla_tabla } from "./constantes.js";
-
-interface datosTabla {
-    tabla: string,
-    titulo: string,
-    ruta: string,
-    registro: string,
-    tablaVisual: string
-}
-
-const columnasTabla = {
-    datos_escritura: ["matricula", "nro_protocolo", "anio", "nombre_escribano", "apellido_escribano", "cuit", "nombre", "apellido", "id_tipo", "tipo"],
-    escribanos: ["matricula", "nombre_escribano", "apellido_escribano", "capacidad", "estado"],
-    clientes: ["cuit", "nombre", "apellido"],
-    escrituras: ["matricula", "nro_protocolo", "anio", "cuit", "id_tipo"],
-    tipo_escrituras: ["id_tipo", "tipo", "experiencia_requerida"]
-}
-
-const enums = ["experiencia", "estado"];
-
-const tables: datosTabla[] = [
-    {tabla: "escribanos", titulo: "Escribanos", ruta: "/api/escribanos", registro: "escribano", tablaVisual: "escribanos"},
-    {tabla: "clientes", titulo: "Clientes", ruta: "/api/clientes", registro: "cliente", tablaVisual: "clientes"},
-    {tabla: "tipo_escrituras", titulo: "Tipos de Escrituras", ruta: "/api/tipo_escrituras", registro: "tipo de escritura", tablaVisual: "tipo_escrituras"},
-    {tabla: "escrituras", titulo: "Escrituras", ruta: "/api/escrituras", registro: "escritura", tablaVisual: "datos_escritura"}
-]
+import {datosTabla, Atributos, columnasTablas, tables, buscarEnum, obtenerPK} from "./metadatos.js"
 
 async function obtenerFilas(cliente: Client, tabla: string, _: Request, res: Response){
     const filas = await buscarTodosEnTabla(cliente, tabla);
@@ -54,38 +30,42 @@ async function editarFila(cliente: Client, tabla: string, req: Request, res: Res
     res.json("OK");
 }
 
-function generarTable(atributos: string[]): string{
-    return atributos.map((atributo: string) => 
-                                `<th>${atributo.replace("_", " ")} <button onclick="ordenarPor('${atributo}')">↓</button></th>`)
+function generarTable(atributos: Atributos[]): string{
+    return atributos.map((atributo: Atributos) => 
+                                `<th>${atributo.visual} <button onclick="ordenarPor('${atributo.nombre}')">↓</button></th>`)
                                 .join(`\n`);
 
 }
 
 
-async function generarForm(cliente: Client, atributos: string[], tabla: string): Promise<string>{
+async function generarForm(infoAtributos: Atributos[]): Promise<string>{
+    const clienteDB = await crearCliente();
+    const res =  await Promise.all(infoAtributos.map(async (atributo: Atributos) =>{ 
+        const infoEnum = atributo.tipo ? buscarEnum(atributo.tipo) : null; //Null si no es un enum, los enums si lo es
 
-    const res = await Promise.all(atributos.map(async (atributo: string) =>{ 
-        const tipo = await obtenerTipoDe(cliente, tabla, atributo);
+        if(infoEnum || atributo.esFKDe){
+            const opciones = infoEnum ? infoEnum : await obtenerCamposDeTablaCon(clienteDB, atributo.esFKDe, atributo.nombre, atributo.aVerPorUsuario);
+            const opcionesHTML = opciones
+            .map(valor => {
 
-        if(enums.includes(tipo)){
-            let enums = await obtenerEnums(cliente, await obtenerTipoDe(cliente, tabla, atributo));
-            
-            const opcionesHTML = enums
-          .map(valor => `<option value="${valor}">${valor}</option>`)
+            const valorReal = valor.includes("-") ? valor.split(" - ")[0] : valor;
+                    
+            return `<option value="${valorReal}">${valor}</option>`})
           .join('\n');
 
         return `
-          <label for="${atributo}">${atributo.replace("_", " ")}:</label>
-          <select id="${atributo}" name="${atributo}" required>
+          <label for="${atributo.nombre}">${atributo.visual}:</label>
+          <select id="${atributo.nombre}" name="${atributo.visual}" required>
             <option value="">Seleccione una opción</option>
             ${opcionesHTML}
           </select>
         `;
         }
 
-        return `<input id="${atributo}" placeholder="${atributo.replace("_", " ")}" required />`;
+        return `<input id="${atributo.nombre}" placeholder="${atributo.visual}" required />`;
         
     })); 
+    await clienteDB.end();
     
     return res.join('\n');
 }
@@ -101,25 +81,22 @@ async function generarHTML(datos: datosTabla): Promise<string>{
     for (const [clave, valor] of Object.entries(textos)) {
         html = html.replaceAll(`{{${clave}}}`, valor);
     }
-    const cliente = await crearCliente();
 
-    let atributos = columnasTabla[datos.tabla as keyof typeof columnasTabla];
-    const atributosVisuales = columnasTabla[datos.tablaVisual as keyof typeof columnasTabla];;
+    let infoAtributos = columnasTablas[datos.tabla] ?? [];
+    let infoAtributosVisuales = columnasTablas[datos.tablaVisual] ?? [];
 
-    const clavePrimaria = await obtenerClavePrimariaTabla(cliente, datos.tabla);
+    const clavePrimaria = obtenerPK(datos.tabla);
 
     html = html.replace('#[Solicita]', habilitarSolicitud.toString());
-    html = html.replace(`#[Attr]`, JSON.stringify(atributos));
+    html = html.replace(`#[Attr]`, JSON.stringify(infoAtributos.map((at: Atributos) => at.nombre)));
     html = html.replace("#[PK]", JSON.stringify(clavePrimaria));
 
-    const table = generarTable(atributosVisuales);
+    const table = generarTable(infoAtributosVisuales);
     html = html.replace("#[Table]", table);
 
-    const form = await generarForm(cliente, atributos, datos.tabla);
+    const form = await generarForm(infoAtributos);
 
     html = html.replace(`#[Form]`, form);
-
-    cliente.end();
 
     html = html.replace(`#[Ruta]`, `"${datos.ruta}"`);
     return html;
@@ -144,9 +121,8 @@ export async function generarCRUD(app: Express.Application){
     for (const datosTabla of tables){
 
         let rutaParametros = `${datosTabla.ruta}`;
-        const client = await crearCliente();
 
-        const clavePrimaria = await obtenerClavePrimariaTabla(client, datosTabla.tabla);
+        const clavePrimaria = obtenerPK(datosTabla.tabla);
         for (const clave of clavePrimaria){
             rutaParametros += `/:${clave}`;
         }
