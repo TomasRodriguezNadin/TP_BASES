@@ -14,7 +14,7 @@ function sqlLiteral(literal:string|number|null): string{
     return res;
 }
 
-export async function obtenerCamposDeTablaCon(client: Client, tablaRelacionada:string | null, campo:string, campoExtra: string | null): Promise<string[]>{
+export async function obtenerCamposDeTablaCon(client: Client, tablaRelacionada:string | undefined, campo:string, campoExtra: string | undefined): Promise<string[]>{
     
     const query = campoExtra ? `SELECT ${campo}, ${campoExtra} FROM TP.${tablaRelacionada}` 
                           : `SELECT ${campo} FROM TP.${tablaRelacionada}`;

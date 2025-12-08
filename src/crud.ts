@@ -6,7 +6,7 @@ import { requireAuthAPI, requireAuth } from "./servidor.js";
 import {readFile} from 'node:fs/promises';
 import { crearCliente } from "./acciones/coneccion.js";
 import { path_plantilla_tabla } from "./constantes.js";
-import {datosTabla, Atributos, columnasTablasYVistas, tables, buscarEnum, obtenerPK} from "./metadatos.js"
+import {datosTabla, Atributos, columnasTablas, tables, buscarEnum, obtenerPK} from "./metadatos.js"
 
 async function obtenerFilas(cliente: Client, tabla: string, _: Request, res: Response){
     const filas = await buscarTodosEnTabla(cliente, tabla);
@@ -41,7 +41,7 @@ function generarTable(atributos: Atributos[]): string{
 async function generarForm(infoAtributos: Atributos[]): Promise<string>{
     const clienteDB = await crearCliente();
     const res =  await Promise.all(infoAtributos.map(async (atributo: Atributos) =>{ 
-        const infoEnum = buscarEnum(atributo.tipo); //Null si no es un enum, los enums si lo es
+        const infoEnum = atributo.tipo ? buscarEnum(atributo.tipo) : null; //Null si no es un enum, los enums si lo es
 
         if(infoEnum || atributo.esFKDe){
             const opciones = infoEnum ? infoEnum : await obtenerCamposDeTablaCon(clienteDB, atributo.esFKDe, atributo.nombre, atributo.aVerPorUsuario);
@@ -82,8 +82,8 @@ async function generarHTML(datos: datosTabla): Promise<string>{
         html = html.replaceAll(`{{${clave}}}`, valor);
     }
 
-    let infoAtributos = columnasTablasYVistas[datos.tabla as keyof typeof columnasTablasYVistas];
-    let infoAtributosVisuales = columnasTablasYVistas[datos.tablaVisual as keyof typeof columnasTablasYVistas];
+    let infoAtributos = columnasTablas[datos.tabla] ?? [];
+    let infoAtributosVisuales = columnasTablas[datos.tablaVisual] ?? [];
 
     const clavePrimaria = obtenerPK(datos.tabla);
 
