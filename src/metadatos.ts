@@ -2,12 +2,18 @@ export function buscarEnum(nombre: string) {
     return enums[nombre as keyof typeof enums] ?? null;
 }
 
-export function obtenerPK(tabla: keyof typeof columnasTabla): string[] {
-    return columnasTabla[tabla].filter(col => col.esPK).map(col => col.nombre);
+export function obtenerPK(tabla: keyof typeof columnasTablas): string[] {
+    return columnasTablas[tabla].filter(col => col.esPK).map(col => col.nombre);
+}
+
+function obtenerInfoDe(datosAObtener: string[], tabla: keyof typeof columnasTablas): Atributos[]{
+    const columnas = columnasTablas[tabla];
+
+    return columnas.filter(col => datosAObtener.includes(col.nombre));
 }
 
 export interface datosTabla {
-    tabla: keyof typeof columnasTabla,
+    tabla: keyof typeof columnasTablas,
     titulo: string,
     ruta: string,
     registro: string,
@@ -18,7 +24,7 @@ export interface Atributos {
   nombre: string;
   visual: string;
   tipo: string;
-  esPK: Boolean,
+  esPK: boolean,
   esFKDe: string | null;
   aVerPorUsuario: string | null; //En caso de que sea un tipo enum o una FK, lo que quiero que este al lado de ella   
   
@@ -26,18 +32,8 @@ export interface Atributos {
 
 export const enums = {experiencia: ["principiante", "mediano", "experimentado"], estado: ["contratado", "no contratado"]};
 
-export const columnasTabla =  
-    {datos_escritura: [{nombre: "matricula", visual: "Matrícula", tipo: "Number", esPK: true, esFKDe: "escribanos", aVerPorUsuario: "apellido_escribano"}, 
-        {nombre: "nro_protocolo", visual: "Número de protocolo", tipo: "Number", esPK: true, esFKDe: null, aVerPorUsuario: null}, 
-        {nombre: "anio", visual: "Año", tipo: "Number", esPK: true, esFKDe: null, aVerPorUsuario: null}, 
-        {nombre: "nombre_escribano", visual: "Nombre de escribano", tipo: "String", esPK: false, esFKDe: null, aVerPorUsuario: null}, 
-        {nombre: "apellido_escribano", visual: "Apellido de escribano", tipo: "String", esPK: false, esFKDe: null, aVerPorUsuario: null}, 
-        {nombre: "cuit", visual: "Cuit", tipo: "Number", esPK: false, esFKDe: "clientes", aVerPorUsuario: null}, 
-        {nombre: "nombre", visual: "Nombre", tipo: "String", esPK: false, esFKDe: null, aVerPorUsuario: null}, 
-        {nombre: "apellido", visual: "Apellido", tipo: "String", esPK: false, esFKDe: null, aVerPorUsuario: null}, 
-        {nombre: "id_tipo", visual: "ID", tipo: "Number", esPK: false, esFKDe: "tipo_escrituras", aVerPorUsuario: "tipo"},
-        {nombre: "tipo", visual: "Tipo", tipo: "String", esPK: false, esFKDe: null, aVerPorUsuario: null}],
-
+const columnasTablas =  
+    {
     escribanos: [{nombre: "matricula", visual: "Matrícula", tipo: "Number", esPK: true, esFKDe: null, aVerPorUsuario: null}, 
         {nombre: "nombre_escribano", visual: "Nombre de escribano", tipo: "String", esPK: false, esFKDe: null, aVerPorUsuario: null}, 
         {nombre: "apellido_escribano", visual: "Apellido de escribano", tipo: "String", esPK: false, esFKDe: null, aVerPorUsuario: null}, 
@@ -58,6 +54,13 @@ export const columnasTabla =
         {nombre: "tipo", visual: "Tipo", tipo: "string", esPK: true, esFKDe: null, aVerPorUsuario: null}, 
         {nombre: "experiencia_requerida", visual: "Experiencia requerida", tipo: "experiencia", esPK: false, esFKDe: null, aVerPorUsuario: null}]}
 
+
+export const columnasTablasYVistas =
+{...columnasTablas,
+   datos_escritura: 
+        [...obtenerInfoDe(["matricula", "nro_protocolo", "anio"], "escrituras"), ...obtenerInfoDe(["nombre_escribano", "apellido_escribano"], "escribanos"),
+         ...obtenerInfoDe(["cuit", "nombre", "apellido"], "clientes"), ...obtenerInfoDe(["id_tipo", "tipo"], "tipo_escrituras")],
+}
 
 export const tables: datosTabla[] = [
     {tabla: "escribanos", titulo: "Escribanos", ruta: "/api/escribanos", registro: "escribano", tablaVisual: "escribanos"},

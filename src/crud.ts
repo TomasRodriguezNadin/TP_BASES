@@ -6,7 +6,7 @@ import { requireAuthAPI, requireAuth } from "./servidor.js";
 import {readFile} from 'node:fs/promises';
 import { crearCliente } from "./acciones/coneccion.js";
 import { path_plantilla_tabla } from "./constantes.js";
-import {datosTabla, Atributos, columnasTabla, tables, buscarEnum, obtenerPK} from "./metadatos.js"
+import {datosTabla, Atributos, columnasTablasYVistas, tables, buscarEnum, obtenerPK} from "./metadatos.js"
 
 async function obtenerFilas(cliente: Client, tabla: string, _: Request, res: Response){
     const filas = await buscarTodosEnTabla(cliente, tabla);
@@ -82,8 +82,8 @@ async function generarHTML(datos: datosTabla): Promise<string>{
         html = html.replaceAll(`{{${clave}}}`, valor);
     }
 
-    let infoAtributos = columnasTabla[datos.tabla as keyof typeof columnasTabla];
-    let infoAtributosVisuales = columnasTabla[datos.tablaVisual as keyof typeof columnasTabla];
+    let infoAtributos = columnasTablasYVistas[datos.tabla as keyof typeof columnasTablasYVistas];
+    let infoAtributosVisuales = columnasTablasYVistas[datos.tablaVisual as keyof typeof columnasTablasYVistas];
 
     const clavePrimaria = obtenerPK(datos.tabla);
 
