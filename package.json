@@ -22,7 +22,7 @@
   },
   "type": "module",
   "scripts": {
-    "build": "npx tsc",
+    "build": "tsc",
     "start": "node dist/servidor.js",
     "startCli": "node dist/cli.js",
     "servidor": "npm run build && npm run start",
