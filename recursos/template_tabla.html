@@ -33,6 +33,7 @@
     const atributos = #[Attr];
     const solicitaEscritura = #[Solicita];
     let ordenarPorAtributo = null;
+    const nombreTabla = #[Tabla];
 
     let filas = [];
 
@@ -57,7 +58,9 @@
         }
         let botonSolicitarEscritura = "";
         if(solicitaEscritura){
-          botonSolicitarEscritura = `<button onclick="solicitarEscritura(${indice})">Solicitar Escritura/s</button>`;
+          //Unico caso de singular
+          const textoSolicitar = "Solicitar Escritura" + (nombreTabla === "escrituras"? "" : "/s");
+          botonSolicitarEscritura = `<button onclick="solicitarEscritura(${indice})">${textoSolicitar}</button>`;
         }
 
         html += `

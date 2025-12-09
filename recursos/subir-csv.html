@@ -16,7 +16,7 @@
     <option value="1" label = "Escribanos"></option>
     <option value="2" label = "Clientes"></option>
     <option value="3" label = "Escrituras"></option>
-    <option value="4" label = "Tipo_escrituras"></option>
+    <option value="4" label = "Tipo escrituras"></option>
   </select>
 
   <br><br>
@@ -56,6 +56,7 @@
 
       const text = await file.text();
       const jsonData = parseCSV(text);
+      opcion = opcion.replace(" ", "_");
 
       const aEnviar = {
         tabla: opcion,   

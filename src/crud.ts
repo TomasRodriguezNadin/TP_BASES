@@ -90,6 +90,7 @@ async function generarHTML(datos: datosTabla): Promise<string>{
     html = html.replace('#[Solicita]', habilitarSolicitud.toString());
     html = html.replace(`#[Attr]`, JSON.stringify(infoAtributos.map((at: Atributos) => at.nombre)));
     html = html.replace("#[PK]", JSON.stringify(clavePrimaria));
+    html = html.replace('#[Tabla]', JSON.stringify(datos.tabla));
 
     const table = generarTable(infoAtributosVisuales);
     html = html.replace("#[Table]", table);
