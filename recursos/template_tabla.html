@@ -59,7 +59,7 @@
         let botonSolicitarEscritura = "";
         if(solicitaEscritura){
           //Unico caso de singular
-          const textoSolicitar = "Solicitar Escritura" + (nombreTabla === "escrituras"? "" : "/s");
+          const textoSolicitar = "Solicitar Escritura" + (nombreTabla === "escrituras"? "" : "s");
           botonSolicitarEscritura = `<button onclick="solicitarEscritura(${indice})">${textoSolicitar}</button>`;
         }
 
